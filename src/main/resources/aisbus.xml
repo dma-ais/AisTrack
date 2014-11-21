@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<aisBusConfiguration>
+	<!-- AISW -->
+	<provider xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="tcpClientProviderConfiguration">
+		<name>AISW_unfiltered</name>
+		<hostPort>10.33.129.110:65261</hostPort>
+		<hostPort>10.33.129.111:65261</hostPort>
+		<reconnectInterval>1</reconnectInterval>
+		<timeout>5</timeout>
+		<filter xsi:type="duplicateFilterConfiguration"/>
+		<transformer xsi:type="taggingTransformerConfiguration">
+			<tagPolicy>PREPEND_MISSING</tagPolicy>
+			<tagging>
+				<sourceId>AISW</sourceId>
+			</tagging>
+		</transformer>
+	</provider>
+</aisBusConfiguration>
