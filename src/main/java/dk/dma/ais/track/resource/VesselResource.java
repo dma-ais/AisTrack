@@ -26,9 +26,23 @@ public class VesselResource {
     
     @GET
     @Path("{mmsi}")
-    public void getTarget(@PathParam("mmsi") Integer mmsi) {
+    public String getTarget(@PathParam("mmsi") Integer mmsi) {
         
         // TODO
+        return "HEllo world single target";
+    }
+    
+    @GET
+    @Path("/list")
+    public String getTargetList() {
+        // TODO Filtering
+        // geo
+        // ttlSat and ttlLive
+        // List of mmsi numbers (should may
+        
+        
+        // TODO
+        return "HEllo world list target";
     }
     
 

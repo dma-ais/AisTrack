@@ -21,6 +21,7 @@ import dk.dma.ais.message.AisMessage;
 import dk.dma.ais.message.AisMessage5;
 import dk.dma.ais.message.AisPositionMessage;
 import dk.dma.ais.message.AisStaticCommon;
+import dk.dma.ais.message.AisTargetType;
 import dk.dma.ais.message.IVesselPositionMessage;
 import dk.dma.ais.message.NavigationalStatus;
 import dk.dma.ais.message.ShipTypeCargo;
@@ -81,12 +82,12 @@ public class VesselTarget extends Target {
         }
         if (message instanceof AisStaticCommon) {
             this.lastStaticReport = packet.getTimestamp();
-            AisStaticCommon stat = (AisStaticCommon) message;            
+            AisStaticCommon stat = (AisStaticCommon) message;
             this.name = AisMessage.trimText(stat.getName());
             this.callsign = AisMessage.trimText(stat.getCallsign());
             ShipTypeCargo shipTypeCargo = new ShipTypeCargo(stat.getShipType());
             this.vesselType = shipTypeCargo.prettyType();
-            this.vesselCargo = shipTypeCargo.prettyCargo();            
+            this.vesselCargo = shipTypeCargo.prettyCargo();
             if (message instanceof AisMessage5) {
                 AisMessage5 msg5 = (AisMessage5) message;
                 AisTargetDimensions dim = new AisTargetDimensions(msg5);
@@ -266,43 +267,46 @@ public class VesselTarget extends Target {
     public void setLastStaticReport(Date lastStaticReport) {
         this.lastStaticReport = lastStaticReport;
     }
-    
+
     public VesselTarget merge(VesselTarget t) {
-        // TODO determine merge type
-        //Pos -> wipe all position related data
-        //StatA -> wipe all static data
-        //StatB -> wipe nothing
-        
-        
-        
+        boolean posUpdate = t.getLastPosReport() != null;
+        boolean classB = t.getTargetType() != null && t.getTargetType() == AisTargetType.B;
+
+        // Metadata
         VesselTarget newT = new VesselTarget();
         newT.targetType = t.targetType != null ? t.targetType : this.targetType;
         newT.lastReport = t.lastReport;
         newT.sourceType = t.sourceType;
         newT.sourceCountry = t.sourceCountry;
-        newT.lat = t.lat != null ? t.lat : this.lat;
-        newT.lon = t.lon != null ? t.lon : this.lon;
-        newT.cog = t.cog != null ? t.cog : this.cog;
-        newT.sog = t.sog != null ? t.sog : this.sog;
-        newT.heading = t.heading != null ? t.heading : this.heading;
-        newT.rot = t.rot != null ? t.rot : this.rot;
-        newT.length = t.length != null ? t.length : this.length;
-        newT.width = t.width != null ? t.width : this.width;        
-        newT.name = t.name != null ? t.name : this.name;
-        newT.callsign = t.callsign != null ? t.callsign : this.callsign;
-        newT.imoNo = t.imoNo != null ? t.imoNo : this.imoNo;
-        newT.destination = t.destination != null ? t.destination : this.destination;
-        newT.callsign = t.callsign != null ? t.callsign : this.callsign;
-        newT.draught = t.draught != null ? t.draught : this.draught;
-        newT.navStatus = t.navStatus != null ? t.navStatus : this.navStatus;
-        newT.moored = t.moored != null ? t.moored : this.moored;
-        newT.eta = t.eta != null ? t.eta : this.eta;
-        newT.vesselType = t.vesselType != null ? t.vesselType : this.vesselType;
-        newT.vesselCargo = t.vesselCargo != null ? t.vesselCargo : this.vesselCargo;
         newT.lastPosReport = t.lastPosReport != null ? t.lastPosReport : this.lastPosReport;
         newT.lastStaticReport = t.lastStaticReport != null ? t.lastStaticReport : this.lastStaticReport;
-        newT.eta = t.eta != null ? t.eta : this.eta;
+
+        // Navigational data
+        if (posUpdate) {
+            newT.lat = t.lat;
+            newT.lon = t.lon;
+            newT.cog = t.cog;
+            newT.sog = t.sog;
+            newT.heading = t.heading;
+            newT.rot = t.rot;
+            newT.navStatus = t.navStatus;
+            newT.moored = t.moored;
+        } else {
+            // Static update
+            newT.name = t.name != null ? t.name : (classB ? this.name : null);
+            newT.callsign = t.callsign != null ? t.callsign : (classB ? this.callsign : null);
+            newT.length = t.length != null ? t.length : (classB ? this.length : null);
+            newT.width = t.width != null ? t.width : (classB ? this.width : null);
+            newT.imoNo = t.imoNo != null ? t.imoNo : (classB ? this.imoNo : null);
+            newT.destination = t.destination != null ? t.destination : (classB ? this.destination : null);
+            newT.callsign = t.callsign != null ? t.callsign : (classB ? this.callsign : null);
+            newT.draught = t.draught != null ? t.draught : (classB ? this.draught : null);
+            newT.eta = t.eta != null ? t.eta : (classB ? this.eta : null);
+            newT.vesselType = t.vesselType != null ? t.vesselType : (classB ? this.vesselType : null);
+            newT.vesselCargo = t.vesselCargo != null ? t.vesselCargo : (classB ? this.vesselCargo : null);
+        }
+
         return newT;
-    }   
+    }
 
 }

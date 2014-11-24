@@ -1,8 +1,7 @@
-+ Merge methods
-+ How to make immutable and use with REST (XmlAdapter or Could builder pattern be used) 
++ Dependency injection, look at guice
 + CacheBuilder with timeout
 + Configuration with owner
-+ Dependency injection, look at guice
++ How to make immutable and use with REST (XmlAdapter or Could builder pattern be used)
 + Persistence
 + Past track
 + Filtering

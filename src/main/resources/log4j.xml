@@ -13,6 +13,10 @@
 		</layout>
 	</appender>
 
+	<logger name="dk.dma.ais">
+		<level value="ERROR" />
+	</logger>
+
 	<root>
 		<appender-ref ref="CONSOLE" />
 	</root>
