@@ -86,4 +86,9 @@ public class Target {
         this.lastReport = lastReport;
     }
     
+    @Override
+    public int hashCode() {
+        return mmsi;
+    }
+    
 }

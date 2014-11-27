@@ -26,6 +26,7 @@ import com.google.inject.Injector;
 import dk.dma.ais.bus.AisBus;
 import dk.dma.ais.bus.consumer.DistributerConsumer;
 import dk.dma.ais.configuration.bus.AisBusConfiguration;
+import dk.dma.ais.track.resource.AbstractResource;
 import dk.dma.commons.app.AbstractDaemon;
 
 public class AisTrackDaemon extends AbstractDaemon {
@@ -66,6 +67,9 @@ public class AisTrackDaemon extends AbstractDaemon {
 
         // Make web server
         webServer = new WebServer(port);
+
+        // Register objects
+        webServer.getContext().setAttribute(AbstractResource.CONFIG, AbstractResource.create(handler));
 
         webServer.start();
         LOG.info("AisTrack started");

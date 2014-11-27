@@ -274,15 +274,16 @@ public class VesselTarget extends Target {
 
         // Metadata
         VesselTarget newT = new VesselTarget();
+        newT.mmsi = t.mmsi;
         newT.targetType = t.targetType != null ? t.targetType : this.targetType;
         newT.lastReport = t.lastReport;
         newT.sourceType = t.sourceType;
         newT.sourceCountry = t.sourceCountry;
         newT.lastPosReport = t.lastPosReport != null ? t.lastPosReport : this.lastPosReport;
         newT.lastStaticReport = t.lastStaticReport != null ? t.lastStaticReport : this.lastStaticReport;
-
-        // Navigational data
+                
         if (posUpdate) {
+            // Navigational update
             newT.lat = t.lat;
             newT.lon = t.lon;
             newT.cog = t.cog;
@@ -291,8 +292,20 @@ public class VesselTarget extends Target {
             newT.rot = t.rot;
             newT.navStatus = t.navStatus;
             newT.moored = t.moored;
+            // Static copy
+            newT.name = this.name;
+            newT.callsign = this.callsign;
+            newT.length = this.length;
+            newT.width = this.width;
+            newT.imoNo = this.imoNo;
+            newT.destination = this.destination;
+            newT.callsign = this.callsign;
+            newT.draught = this.draught;
+            newT.eta = this.eta;
+            newT.vesselType = this.vesselType;
+            newT.vesselCargo = this.vesselCargo;
         } else {
-            // Static update
+            // Static update (or partly copy if class B)
             newT.name = t.name != null ? t.name : (classB ? this.name : null);
             newT.callsign = t.callsign != null ? t.callsign : (classB ? this.callsign : null);
             newT.length = t.length != null ? t.length : (classB ? this.length : null);
@@ -304,9 +317,31 @@ public class VesselTarget extends Target {
             newT.eta = t.eta != null ? t.eta : (classB ? this.eta : null);
             newT.vesselType = t.vesselType != null ? t.vesselType : (classB ? this.vesselType : null);
             newT.vesselCargo = t.vesselCargo != null ? t.vesselCargo : (classB ? this.vesselCargo : null);
+            // Navigational copy
+            newT.lat = this.lat;
+            newT.lon = this.lon;
+            newT.cog = this.cog;
+            newT.sog = this.sog;
+            newT.heading = this.heading;
+            newT.rot = this.rot;
+            newT.navStatus = this.navStatus;
+            newT.moored = this.moored;
         }
 
         return newT;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("VesselTarget [lat=").append(lat).append(", lon=").append(lon).append(", cog=").append(cog).append(", sog=")
+                .append(sog).append(", heading=").append(heading).append(", rot=").append(rot).append(", length=").append(length)
+                .append(", width=").append(width).append(", name=").append(name).append(", callsign=").append(callsign)
+                .append(", imoNo=").append(imoNo).append(", destination=").append(destination).append(", draught=").append(draught)
+                .append(", navStatus=").append(navStatus).append(", moored=").append(moored).append(", eta=").append(eta)
+                .append(", vesselType=").append(vesselType).append(", vesselCargo=").append(vesselCargo).append(", lastPosReport=")
+                .append(lastPosReport).append(", lastStaticReport=").append(lastStaticReport).append("]");
+        return builder.toString();
     }
 
 }

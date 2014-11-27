@@ -16,7 +16,6 @@ package dk.dma.ais.track;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.handler.HandlerWrapper;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.glassfish.jersey.servlet.ServletContainer;
@@ -58,9 +57,12 @@ public class WebServer {
         sho.setClassName("org.glassfish.jersey.servlet.ServletContainer");
         sho.setInitParameter("jersey.config.server.provider.packages", "dk.dma.ais.track.resource");
         context.addServlet(sho, "/*");
-        HandlerWrapper hw = new HandlerWrapper();
-        hw.setHandler(context);
-        server.setHandler(hw);
+        
+//        GzipHandler gzipHandler = new GzipHandler();
+//        gzipHandler.setHandler(context);
+//        server.setHandler(gzipHandler);
+        
+        server.setHandler(context);
         server.start();
     }
 

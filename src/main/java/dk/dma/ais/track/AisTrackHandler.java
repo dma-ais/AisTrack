@@ -14,7 +14,9 @@
  */
 package dk.dma.ais.track;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
@@ -67,7 +69,7 @@ public class AisTrackHandler implements Consumer<AisPacket> {
         VesselTarget target = new VesselTarget(packet);
         
         // Get existing entry
-        VesselTarget oldTarget = vesselStore.get(target.getMmsi());
+        VesselTarget oldTarget = vesselStore.get(target.getMmsi());        
         
         // Avoid updating with old pos message
         if (oldTarget != null && message instanceof IVesselPositionMessage) {
@@ -87,9 +89,24 @@ public class AisTrackHandler implements Consumer<AisPacket> {
         // Merge and save
         if (oldTarget != null) {
             target = oldTarget.merge(target);
-        }        
+        }
         vesselStore.put(target);
-        
+    }
+    
+    public VesselTarget getVessel(int mmsi) {
+        return vesselStore.get(mmsi);
+    }
+    
+    public TargetStore<VesselTarget> getVesselStore() {
+        return vesselStore;
+    }
+
+    public List<VesselTarget> getVesselList() {
+        List<VesselTarget> targets = new ArrayList<>();
+        for (VesselTarget t : vesselStore.list()) {
+            targets.add(t);            
+        }
+        return targets;
     }
 
 }

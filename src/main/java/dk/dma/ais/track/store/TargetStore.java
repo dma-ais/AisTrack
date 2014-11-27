@@ -14,6 +14,8 @@
  */
 package dk.dma.ais.track.store;
 
+import java.util.Collection;
+
 import dk.dma.ais.track.model.Target;
 
 /**
@@ -26,5 +28,7 @@ public interface TargetStore<T extends Target> {
     void put(T target);
     
     int size();
+    
+    Collection<T> list();
     
 }

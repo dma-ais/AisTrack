@@ -14,6 +14,7 @@
  */
 package dk.dma.ais.track.store;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -22,9 +23,6 @@ import dk.dma.ais.track.model.Target;
 public class MapTargetStore<T extends Target> implements TargetStore<T> {
 
     private final Map<Integer, T> map = new ConcurrentHashMap<>();
-
-    public MapTargetStore() {
-    }
 
     @Override
     public T get(int mmsi) {
@@ -39,6 +37,11 @@ public class MapTargetStore<T extends Target> implements TargetStore<T> {
     @Override
     public int size() {
         return map.size();
+    }
+    
+    @Override
+    public Collection<T> list() {
+        return map.values();
     }
 
 }

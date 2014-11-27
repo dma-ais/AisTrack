@@ -14,36 +14,53 @@
  */
 package dk.dma.ais.track.resource;
 
+import java.util.List;
+
+import javax.inject.Singleton;
 import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import dk.dma.ais.track.AisTrackHandler;
+import dk.dma.ais.track.model.VesselTarget;
+
+@Singleton
 @Path("/target/vessel")
 @Produces(MediaType.APPLICATION_JSON)
-public class VesselResource {
+public class VesselResource extends AbstractResource {
     
     @GET
     @Path("{mmsi}")
-    public String getTarget(@PathParam("mmsi") Integer mmsi) {
-        
-        // TODO
-        return "HEllo world single target";
+    public VesselTarget getTarget(@PathParam("mmsi") Integer mmsi) {
+        VesselTarget target = handler().getVessel(mmsi);
+        if (target == null) {
+            throw new NotFoundException();
+        }
+        return target;
     }
     
     @GET
     @Path("/list")
-    public String getTargetList() {
+    public List<VesselTarget> getTargetList() {
         // TODO Filtering
+        // filtering class parsing from arguments
         // geo
         // ttlSat and ttlLive
         // List of mmsi numbers (should may
-        
-        
-        // TODO
-        return "HEllo world list target";
+        return handler().getVesselList();
     }
     
+    @GET
+    @Path("/count")
+    public String getTargetCount() {
+        return String.format("{\"count\" : %d}", handler().getVesselStore().size());
+    }
+    
+    private AisTrackHandler handler() {
+        return get(AisTrackHandler.class);
+    }
 
 }
