@@ -1,3 +1,4 @@
++ Marshalling problem, consider making a webapp with runnable jar
 + Query filtering
 + CacheBuilder with timeout
 + Filtering on the input side for AW (plus downsampling)
