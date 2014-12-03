@@ -1,7 +1,5 @@
-+ Marshalling problem, consider making a webapp with runnable jar
-+ Query filtering
++ Query filtering: ttl, geo, mmsi
 + CacheBuilder with timeout
-+ Filtering on the input side for AW (plus downsampling)
 + Configuration with owner
 + Past track
 + Persistence

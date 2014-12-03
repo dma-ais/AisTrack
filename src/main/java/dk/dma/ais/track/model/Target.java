@@ -20,6 +20,7 @@ import dk.dma.ais.message.AisMessage;
 import dk.dma.ais.message.AisTargetType;
 import dk.dma.ais.packet.AisPacket;
 import dk.dma.ais.packet.AisPacketTags;
+import dk.dma.ais.proprietary.IProprietarySourceTag;
 import dk.dma.enav.model.Country;
 
 /**
@@ -33,12 +34,13 @@ public class Target {
     protected Date lastReport;
     protected String sourceType;
     protected String sourceCountry;
-    
+    protected String sourceRegion;
+
     public Target() {
     }
-    
+
     public Target(AisPacket packet) {
-        AisMessage message = packet.tryGetAisMessage();        
+        AisMessage message = packet.tryGetAisMessage();
         this.targetType = message.getTargetType();
         this.mmsi = message.getUserId();
         Country c = Country.getCountryForMmsi(message.getUserId());
@@ -51,6 +53,10 @@ public class Target {
         Country sc = tags.getSourceCountry();
         if (sc != null) {
             this.sourceCountry = sc.getTwoLetter();
+        }
+        IProprietarySourceTag sourceTag = packet.getVdm().getSourceTag();
+        if (sourceTag != null) {
+            this.sourceRegion = sourceTag.getRegion();
         }
     }
 
@@ -85,10 +91,34 @@ public class Target {
     public void setLastReport(Date lastReport) {
         this.lastReport = lastReport;
     }
+
+    public String getSourceType() {
+        return sourceType;
+    }
+
+    public void setSourceType(String sourceType) {
+        this.sourceType = sourceType;
+    }
+
+    public String getSourceCountry() {
+        return sourceCountry;
+    }
+
+    public void setSourceCountry(String sourceCountry) {
+        this.sourceCountry = sourceCountry;
+    }
     
+    public String getSourceRegion() {
+        return sourceRegion;
+    }
+    
+    public void setSourceRegion(String sourceRegion) {
+        this.sourceRegion = sourceRegion;
+    }
+
     @Override
     public int hashCode() {
         return mmsi;
     }
-    
+
 }
