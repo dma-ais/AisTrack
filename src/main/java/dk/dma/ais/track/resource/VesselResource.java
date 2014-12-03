@@ -22,9 +22,11 @@ import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import dk.dma.ais.track.AisTrackHandler;
+import dk.dma.ais.track.VesselFilter;
 import dk.dma.ais.track.model.VesselTarget;
 
 @Singleton
@@ -44,13 +46,22 @@ public class VesselResource extends AbstractResource {
     
     @GET
     @Path("/list")
-    public List<VesselTarget> getTargetList() {
+    public List<VesselTarget> getTargetList(@QueryParam("ttlSat") Integer ttlSat, @QueryParam("ttlLive") Integer ttlLive) {
+        // TODO Bean param same for count method
+        VesselFilter vesselFilter = new VesselFilter();
+        if (ttlSat != null) {
+            vesselFilter.setTtlSat(ttlSat);
+        }
+        if (ttlLive != null) {
+            vesselFilter.setTtlLive(ttlLive);
+        }
+        
         // TODO Filtering
         // filtering class parsing from arguments
         // geo
         // ttlSat and ttlLive
         // List of mmsi numbers (should may
-        return handler().getVesselList();
+        return handler().getVesselList(vesselFilter);
     }
     
     @GET

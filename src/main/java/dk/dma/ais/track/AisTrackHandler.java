@@ -33,16 +33,16 @@ import dk.dma.ais.track.store.TargetStore;
 public class AisTrackHandler implements Consumer<AisPacket> {
 
     static final Logger LOG = LoggerFactory.getLogger(AisTrackHandler.class);
-        
+
     private final TargetStore<VesselTarget> vesselStore = new MapTargetStore<>();
-    
+
     public AisTrackHandler() {
     }
 
     @Override
     public void accept(AisPacket packet) {
         // Must have valid AIS message
-        AisMessage message = packet.tryGetAisMessage();        
+        AisMessage message = packet.tryGetAisMessage();
         if (message == null) {
             return;
         }
@@ -64,13 +64,13 @@ public class AisTrackHandler implements Consumer<AisPacket> {
 
     private void handleVessel(AisPacket packet) {
         AisMessage message = packet.tryGetAisMessage();
-        
+
         // Create vessel target
         VesselTarget target = new VesselTarget(packet);
-        
+
         // Get existing entry
-        VesselTarget oldTarget = vesselStore.get(target.getMmsi());        
-        
+        VesselTarget oldTarget = vesselStore.get(target.getMmsi());
+
         // Avoid updating with old pos message
         if (oldTarget != null && message instanceof IVesselPositionMessage) {
             Date oldPosReport = oldTarget.getLastPosReport();
@@ -79,32 +79,34 @@ public class AisTrackHandler implements Consumer<AisPacket> {
                 return;
             }
         }
-        
+
         // Handle target type change
         if (oldTarget != null && (target.getTargetType() != oldTarget.getTargetType())) {
             // Discard old target
             oldTarget = null;
         }
-        
+
         // Merge and save
         if (oldTarget != null) {
             target = oldTarget.merge(target);
         }
         vesselStore.put(target);
     }
-    
+
     public VesselTarget getVessel(int mmsi) {
         return vesselStore.get(mmsi);
     }
-    
+
     public TargetStore<VesselTarget> getVesselStore() {
         return vesselStore;
     }
 
-    public List<VesselTarget> getVesselList() {
+    public List<VesselTarget> getVesselList(VesselFilter vesselFilter) {
         List<VesselTarget> targets = new ArrayList<>();
         for (VesselTarget t : vesselStore.list()) {
-            targets.add(t);            
+            if (vesselFilter.test(t)) {
+                targets.add(t);
+            }
         }
         return targets;
     }
