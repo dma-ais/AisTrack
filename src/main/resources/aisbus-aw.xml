@@ -1,7 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <aisBusConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<!-- Input filters -->
+	<filter xsi:type="sanityFilterConfiguration" />
+<!-- 	<filter xsi:type="expressionFilterConfiguration"> -->
+<!-- 		<expression><![CDATA[(s.country not in (GBR)) & ((t.pos within circle(70,-46,1800000)) | ((t.pos within bbox(57,-180,90,180)) & ((s.country=NOR) | (s.region=804))))]]></expression> -->
+<!-- 	</filter> -->
+	<filter xsi:type="expressionFilterConfiguration">
+		<expression><![CDATA[(s.country not in (GBR)) & (s.region!=808)]]></expression>
+	</filter>
 	<filter xsi:type="duplicateFilterConfiguration" />
+	<filter xsi:type="downSampleFilterConfiguration">
+		<samplingRate>300</samplingRate>		
+	</filter>
 	<!-- Provider AISW -->
 	<provider xsi:type="tcpClientProviderConfiguration">
 		<name>AISW_unfiltered</name>

@@ -33,8 +33,6 @@ import dk.dma.enav.model.geometry.Position;
  */
 public class VesselTarget extends Target {
 
-    protected Double lat;
-    protected Double lon;
     protected Double cog;
     protected Double sog;
     protected Double heading;
@@ -106,22 +104,6 @@ public class VesselTarget extends Target {
                 }
             }
         }
-    }
-
-    public Double getLat() {
-        return lat;
-    }
-
-    public void setLat(Double lat) {
-        this.lat = lat;
-    }
-
-    public Double getLon() {
-        return lon;
-    }
-
-    public void setLon(Double lon) {
-        this.lon = lon;
     }
 
     public Double getCog() {

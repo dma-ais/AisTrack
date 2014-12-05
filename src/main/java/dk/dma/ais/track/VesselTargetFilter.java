@@ -14,15 +14,25 @@
  */
 package dk.dma.ais.track;
 
+import javax.ws.rs.core.UriInfo;
+
 import dk.dma.ais.track.model.VesselTarget;
 
-public class VesselFilter extends TargetFilter {
-
-    public VesselFilter() {
+public class VesselTargetFilter extends TargetFilter {
+    
+    public VesselTargetFilter() {
+    }
+    
+    VesselTargetFilter(UriInfo uriInfo) {
+        super(uriInfo);
     }
 
     public boolean test(VesselTarget target) {
         return super.test(target);
+    }
+    
+    public static VesselTargetFilter create(UriInfo uriInfo) {
+        return new VesselTargetFilter(uriInfo);
     }
 
 }

@@ -65,6 +65,11 @@ public class AisTrackHandler implements Consumer<AisPacket> {
     private void handleVessel(AisPacket packet) {
         AisMessage message = packet.tryGetAisMessage();
 
+        // Reject invalid MMSI numbers
+        if (message.getUserId() < 100000000 || message.getUserId() > 999999999) {
+            return;
+        }
+
         // Create vessel target
         VesselTarget target = new VesselTarget(packet);
 
@@ -101,7 +106,7 @@ public class AisTrackHandler implements Consumer<AisPacket> {
         return vesselStore;
     }
 
-    public List<VesselTarget> getVesselList(VesselFilter vesselFilter) {
+    public List<VesselTarget> getVesselList(VesselTargetFilter vesselFilter) {
         List<VesselTarget> targets = new ArrayList<>();
         for (VesselTarget t : vesselStore.list()) {
             if (vesselFilter.test(t)) {
