@@ -13,6 +13,11 @@ public class CacheTargetStore<T extends Target> implements TargetStore<T> {
     private Cache<Integer, T> cache;
 
     public CacheTargetStore() {
+
+    }
+
+    @Override
+    public void init() {
         // TODO paramters from config
         cache = CacheBuilder.newBuilder().expireAfterWrite(48, TimeUnit.HOURS).maximumSize(5000000).build();
     }
@@ -35,6 +40,12 @@ public class CacheTargetStore<T extends Target> implements TargetStore<T> {
     @Override
     public Collection<T> list() {
         return cache.asMap().values();
+    }
+    
+    @Override
+    public void close() {
+        // TODO Auto-generated method stub
+
     }
 
 }

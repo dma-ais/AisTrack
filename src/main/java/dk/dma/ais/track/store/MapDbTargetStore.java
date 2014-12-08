@@ -41,4 +41,12 @@ public class MapDbTargetStore<T extends Target> implements TargetStore<T> {
         return map.values();
     }
 
+    @Override
+    public void init() {
+    }
+
+    @Override
+    public void close() {
+    }
+
 }

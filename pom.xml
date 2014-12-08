@@ -27,6 +27,7 @@
 		<dependencies.jetty.version>9.2.5.v20141112</dependencies.jetty.version>
 		<dependencies.aislib.version>2.2-SNAPSHOT</dependencies.aislib.version>
 		<dependencies.dma-commons.version>0.3-SNAPSHOT</dependencies.dma-commons.version>
+		<dependencies.guice-bridge.version>2.3.0</dependencies.guice-bridge.version>
 	</properties>
 
 	<dependencies>

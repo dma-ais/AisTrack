@@ -16,6 +16,7 @@ package dk.dma.ais.track.resource;
 
 import java.util.List;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
@@ -34,6 +35,13 @@ import dk.dma.ais.track.model.VesselTarget;
 @Path("/target/vessel")
 @Produces(MediaType.APPLICATION_JSON)
 public class VesselResource extends AbstractResource {
+        
+    final AisTrackHandler handler;
+    
+    @Inject
+    public VesselResource(AisTrackHandler handler) {
+        this.handler = handler;
+    }
     
     @GET
     @Path("{mmsi}")
@@ -64,6 +72,9 @@ public class VesselResource extends AbstractResource {
     @GET
     @Path("/count")
     public String getTargetCount(@Context UriInfo uriInfo) {
+        System.out.println("handler: " + handler);
+        
+        
         return String.format("{\"count\" : %d}", handler().getVesselList(VesselTargetFilter.create(uriInfo)).size());
     }
     

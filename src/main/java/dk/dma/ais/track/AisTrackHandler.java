@@ -27,7 +27,7 @@ import dk.dma.ais.message.AisTargetType;
 import dk.dma.ais.message.IVesselPositionMessage;
 import dk.dma.ais.packet.AisPacket;
 import dk.dma.ais.track.model.VesselTarget;
-import dk.dma.ais.track.store.CacheTargetStore;
+import dk.dma.ais.track.store.MapTargetStore;
 import dk.dma.ais.track.store.TargetStore;
 
 public class AisTrackHandler implements Consumer<AisPacket> {
@@ -35,10 +35,13 @@ public class AisTrackHandler implements Consumer<AisPacket> {
     static final Logger LOG = LoggerFactory.getLogger(AisTrackHandler.class);
 
     private final TargetStore<VesselTarget> vesselStore;
-
+    
     public AisTrackHandler() {
-        // TODO from configuration
-        vesselStore = new CacheTargetStore<>();
+        this.vesselStore = new MapTargetStore<VesselTarget>();
+    }
+
+    public AisTrackHandler(TargetStore<VesselTarget> vesselStore) {
+        this.vesselStore = vesselStore;
     }
 
     @Override

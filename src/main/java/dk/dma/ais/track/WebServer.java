@@ -18,9 +18,14 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.inject.Injector;
+
+import dk.dma.ais.track.resource.VesselResource;
 
 public class WebServer {
 
@@ -50,12 +55,13 @@ public class WebServer {
         server.stop();
     }
 
-    public void start() throws Exception {
+    public void start(Injector injector) throws Exception {
+        final ResourceConfig rc = new ResourceConfig();
+        rc.register(injector.getInstance(VesselResource.class));         
+        
         ((ServerConnector) server.getConnectors()[0]).setReuseAddress(true);
         context.setContextPath("/");
-        ServletHolder sho = new ServletHolder(new ServletContainer());
-        sho.setClassName("org.glassfish.jersey.servlet.ServletContainer");
-        sho.setInitParameter("jersey.config.server.provider.packages", "dk.dma.ais.track");
+        ServletHolder sho = new ServletHolder(new ServletContainer(rc));
         context.addServlet(sho, "/*");
         
 //        GzipHandler gzipHandler = new GzipHandler();

@@ -21,12 +21,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.beust.jcommander.Parameter;
+import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 
 import dk.dma.ais.bus.AisBus;
 import dk.dma.ais.bus.consumer.DistributerConsumer;
 import dk.dma.ais.configuration.bus.AisBusConfiguration;
+import dk.dma.ais.track.model.VesselTarget;
 import dk.dma.ais.track.resource.AbstractResource;
+import dk.dma.ais.track.resource.VesselResource;
+import dk.dma.ais.track.store.CacheTargetStore;
+import dk.dma.ais.track.store.TargetStore;
 import dk.dma.commons.app.AbstractDaemon;
 
 public class AisTrackDaemon extends AbstractDaemon {
@@ -45,13 +50,19 @@ public class AisTrackDaemon extends AbstractDaemon {
     private WebServer webServer;
     private AisBus aisBus;
     private AisTrackHandler handler;
+    private TargetStore<VesselTarget> targetStore;
 
     @Override
     protected void runDaemon(Injector injector) throws Exception {
         LOG.info("Starting AisTrackDaemon");
 
+        // Target store
+        // TODO base on settings
+        targetStore = new CacheTargetStore<VesselTarget>();
+        targetStore.init();
+
         // Handler
-        handler = new AisTrackHandler();
+        handler = new AisTrackHandler(targetStore);
 
         // Load AisBus configuration
         AisBusConfiguration aisBusConf = AisBusConfiguration.load(aisBusConfFile);
@@ -69,9 +80,17 @@ public class AisTrackDaemon extends AbstractDaemon {
         webServer = new WebServer(port);
 
         // Register objects
-        webServer.getContext().setAttribute(AbstractResource.CONFIG, AbstractResource.create(handler));
+        webServer.getContext().setAttribute(AbstractResource.CONFIG, AbstractResource.create(handler, targetStore));
 
-        webServer.start();
+        addModule(new AbstractModule() {
+            @Override
+            protected void configure() {                
+                bind(AisTrackHandler.class).toInstance(handler);
+                bind(VesselResource.class);
+            }
+        });
+
+        webServer.start(injector);
         LOG.info("AisTrack started");
         webServer.join();
     }
@@ -89,6 +108,7 @@ public class AisTrackDaemon extends AbstractDaemon {
         if (aisBus != null) {
             aisBus.cancel();
         }
+        targetStore.close();
         super.shutdown();
     }
 
