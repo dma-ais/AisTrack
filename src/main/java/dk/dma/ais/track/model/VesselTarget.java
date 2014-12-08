@@ -14,6 +14,7 @@
  */
 package dk.dma.ais.track.model;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import dk.dma.ais.data.AisTargetDimensions;
@@ -31,8 +32,10 @@ import dk.dma.enav.model.geometry.Position;
 /**
  * Vessel class A and B target
  */
-public class VesselTarget extends Target {
-
+public class VesselTarget extends Target implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
+    
     protected Double cog;
     protected Double sog;
     protected Double heading;

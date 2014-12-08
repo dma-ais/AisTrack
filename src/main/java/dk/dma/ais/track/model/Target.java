@@ -14,6 +14,7 @@
  */
 package dk.dma.ais.track.model;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import dk.dma.ais.message.AisMessage;
@@ -26,8 +27,10 @@ import dk.dma.enav.model.Country;
 /**
  * Base class for all AIS targets
  */
-public class Target {
-
+public class Target implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
+    
     protected AisTargetType targetType;
     protected int mmsi;
     protected String country;

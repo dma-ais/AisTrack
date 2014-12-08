@@ -1,7 +1,7 @@
-+ CacheBuilder with timeout
++ Persistence
+	Investigate further on MapDb
 + Configuration with owner
 + Past track
-+ Persistence
 + Statistics interface, rate, count
 + Dependency injection, look at guice
 + Multiple sources (list of sources) - reflect in output and filtering

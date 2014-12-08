@@ -55,7 +55,7 @@ public class WebServer {
         context.setContextPath("/");
         ServletHolder sho = new ServletHolder(new ServletContainer());
         sho.setClassName("org.glassfish.jersey.servlet.ServletContainer");
-        sho.setInitParameter("jersey.config.server.provider.packages", "dk.dma.ais.track.resource");
+        sho.setInitParameter("jersey.config.server.provider.packages", "dk.dma.ais.track");
         context.addServlet(sho, "/*");
         
 //        GzipHandler gzipHandler = new GzipHandler();
