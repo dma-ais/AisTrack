@@ -39,7 +39,6 @@ public class AisTrackHandler implements Consumer<AisPacket> {
     
     @Inject
     public AisTrackHandler(TargetStore<VesselTarget> vesselStore) {
-        LOG.info("Creating AisTrackHanlder with arg");
         this.vesselStore = vesselStore;
     }
 

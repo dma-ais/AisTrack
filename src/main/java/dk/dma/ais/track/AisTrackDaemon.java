@@ -65,9 +65,6 @@ public class AisTrackDaemon extends AbstractDaemon {
         targetStore = new MapDbTargetStore<VesselTarget>();
         targetStore.init();
 
-        // Handler
-        //handler = new AisTrackHandler(targetStore);
-
         // Make web server
         webServer = new WebServer(port);
 
