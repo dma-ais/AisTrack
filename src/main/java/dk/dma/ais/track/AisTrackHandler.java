@@ -19,6 +19,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
 
+import javax.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +29,6 @@ import dk.dma.ais.message.AisTargetType;
 import dk.dma.ais.message.IVesselPositionMessage;
 import dk.dma.ais.packet.AisPacket;
 import dk.dma.ais.track.model.VesselTarget;
-import dk.dma.ais.track.store.MapTargetStore;
 import dk.dma.ais.track.store.TargetStore;
 
 public class AisTrackHandler implements Consumer<AisPacket> {
@@ -36,11 +37,9 @@ public class AisTrackHandler implements Consumer<AisPacket> {
 
     private final TargetStore<VesselTarget> vesselStore;
     
-    public AisTrackHandler() {
-        this.vesselStore = new MapTargetStore<VesselTarget>();
-    }
-
+    @Inject
     public AisTrackHandler(TargetStore<VesselTarget> vesselStore) {
+        LOG.info("Creating AisTrackHanlder with arg");
         this.vesselStore = vesselStore;
     }
 

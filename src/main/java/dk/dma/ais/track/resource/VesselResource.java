@@ -34,7 +34,7 @@ import dk.dma.ais.track.model.VesselTarget;
 @Singleton
 @Path("/target/vessel")
 @Produces(MediaType.APPLICATION_JSON)
-public class VesselResource extends AbstractResource {
+public class VesselResource {
         
     final AisTrackHandler handler;
     
@@ -46,7 +46,7 @@ public class VesselResource extends AbstractResource {
     @GET
     @Path("{mmsi}")
     public VesselTarget getTarget(@PathParam("mmsi") Integer mmsi) {
-        VesselTarget target = handler().getVessel(mmsi);
+        VesselTarget target = handler.getVessel(mmsi);
         if (target == null) {
             throw new NotFoundException();
         }
@@ -66,16 +66,13 @@ public class VesselResource extends AbstractResource {
     @GET
     @Path("/list")
     public List<VesselTarget> getTargetList(@Context UriInfo uriInfo) {
-        return handler().getVesselList(VesselTargetFilter.create(uriInfo));
+        return handler.getVesselList(VesselTargetFilter.create(uriInfo));
     }
     
     @GET
     @Path("/count")
     public String getTargetCount(@Context UriInfo uriInfo) {
-        System.out.println("handler: " + handler);
-        
-        
-        return String.format("{\"count\" : %d}", handler().getVesselList(VesselTargetFilter.create(uriInfo)).size());
+        return String.format("{\"count\" : %d}", handler.getVesselList(VesselTargetFilter.create(uriInfo)).size());
     }
     
     @GET
@@ -84,8 +81,4 @@ public class VesselResource extends AbstractResource {
         return "{\"todo\" : \"yes\"}";
     }
     
-    private AisTrackHandler handler() {
-        return get(AisTrackHandler.class);
-    }
-
 }

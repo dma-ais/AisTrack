@@ -17,20 +17,24 @@ package dk.dma.ais.track;
 import java.io.File;
 import java.lang.Thread.UncaughtExceptionHandler;
 
+import javax.inject.Singleton;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.beust.jcommander.Parameter;
 import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.TypeLiteral;
 
 import dk.dma.ais.bus.AisBus;
 import dk.dma.ais.bus.consumer.DistributerConsumer;
 import dk.dma.ais.configuration.bus.AisBusConfiguration;
 import dk.dma.ais.track.model.VesselTarget;
-import dk.dma.ais.track.resource.AbstractResource;
 import dk.dma.ais.track.resource.VesselResource;
-import dk.dma.ais.track.store.CacheTargetStore;
+import dk.dma.ais.track.store.MapDbTargetStore;
 import dk.dma.ais.track.store.TargetStore;
 import dk.dma.commons.app.AbstractDaemon;
 
@@ -58,11 +62,27 @@ public class AisTrackDaemon extends AbstractDaemon {
 
         // Target store
         // TODO base on settings
-        targetStore = new CacheTargetStore<VesselTarget>();
+        targetStore = new MapDbTargetStore<VesselTarget>();
         targetStore.init();
 
         // Handler
-        handler = new AisTrackHandler(targetStore);
+        //handler = new AisTrackHandler(targetStore);
+
+        // Make web server
+        webServer = new WebServer(port);
+
+        Module module = new AbstractModule() {
+            @Override
+            protected void configure() {
+                bind(VesselResource.class);
+                bind(new TypeLiteral<TargetStore<VesselTarget>>() {}).toInstance(targetStore);
+                bind(AisTrackHandler.class).in(Singleton.class);                
+            }
+        };
+        
+        injector = Guice.createInjector(module);
+        
+        handler = injector.getInstance(AisTrackHandler.class);
 
         // Load AisBus configuration
         AisBusConfiguration aisBusConf = AisBusConfiguration.load(aisBusConfFile);
@@ -76,20 +96,7 @@ public class AisTrackDaemon extends AbstractDaemon {
         aisBus.startConsumers();
         aisBus.startProviders();
 
-        // Make web server
-        webServer = new WebServer(port);
-
-        // Register objects
-        webServer.getContext().setAttribute(AbstractResource.CONFIG, AbstractResource.create(handler, targetStore));
-
-        addModule(new AbstractModule() {
-            @Override
-            protected void configure() {                
-                bind(AisTrackHandler.class).toInstance(handler);
-                bind(VesselResource.class);
-            }
-        });
-
+        
         webServer.start(injector);
         LOG.info("AisTrack started");
         webServer.join();
