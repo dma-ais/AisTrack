@@ -23,8 +23,6 @@ import dk.dma.ais.track.model.Target;
  */
 public interface TargetStore<T extends Target> {
     
-    void init();
-
     T get(int mmsi);
 
     void put(T target);
@@ -32,7 +30,5 @@ public interface TargetStore<T extends Target> {
     int size();
     
     Collection<T> list();
-    
-    void close();
     
 }

@@ -14,11 +14,13 @@
  */
 package dk.dma.ais.track;
 
-import java.io.File;
+import java.io.FileInputStream;
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.util.Properties;
 
 import javax.inject.Singleton;
 
+import org.aeonbits.owner.ConfigCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +36,6 @@ import dk.dma.ais.bus.consumer.DistributerConsumer;
 import dk.dma.ais.configuration.bus.AisBusConfiguration;
 import dk.dma.ais.track.model.VesselTarget;
 import dk.dma.ais.track.resource.VesselResource;
-import dk.dma.ais.track.store.MapDbTargetStore;
 import dk.dma.ais.track.store.TargetStore;
 import dk.dma.commons.app.AbstractDaemon;
 
@@ -43,46 +44,65 @@ public class AisTrackDaemon extends AbstractDaemon {
     static final Logger LOG = LoggerFactory.getLogger(AisTrackDaemon.class);
 
     @Parameter(names = "-port", description = "The port to run AisTrach HTTP server at")
-    int port = 8080;
+    Integer port;
 
     @Parameter(names = "-backup", description = "The backup directory")
-    File backup;
+    String backup;
 
     @Parameter(names = "-bus", description = "AisBus configuration file")
-    String aisBusConfFile = "aisbus.xml";
+    String aisbusConfFile;
+    
+    @Parameter(names = "-conf", description = "Optional configuration file")
+    String confFile;
 
     private WebServer webServer;
     private AisBus aisBus;
     private AisTrackHandler handler;
-    private TargetStore<VesselTarget> targetStore;
 
     @Override
     protected void runDaemon(Injector injector) throws Exception {
         LOG.info("Starting AisTrackDaemon");
-
-        // Target store
-        // TODO base on settings
-        targetStore = new MapDbTargetStore<VesselTarget>();
-        targetStore.init();
+        
+        // Create configuration
+        Properties argProps = new Properties();
+        Properties confProps = new Properties();
+        if (port != null) {
+            argProps.setProperty("port", Integer.toString(port));
+        }
+        if (backup != null) {
+            argProps.setProperty("backup", backup);
+        }
+        if (aisbusConfFile != null) {
+            argProps.setProperty("aisbusConfFile", aisbusConfFile);
+        }
+        if (confFile != null) {
+            confProps.load(new FileInputStream(confFile));
+        }        
+        AisTrackConfiguration cfg = ConfigCache.getOrCreate(AisTrackConfiguration.class, confProps, argProps);
+        
+        // Get target store class
+        @SuppressWarnings("unchecked")
+        Class<TargetStore<VesselTarget>> targetStoreClazz = (Class<TargetStore<VesselTarget>>) cfg.targetStoreClass();
+        LOG.info("Using " + targetStoreClazz + " target store");
 
         // Make web server
-        webServer = new WebServer(port);
+        webServer = new WebServer(cfg.port());
 
         Module module = new AbstractModule() {
             @Override
             protected void configure() {
                 bind(VesselResource.class);
-                bind(new TypeLiteral<TargetStore<VesselTarget>>() {}).toInstance(targetStore);
-                bind(AisTrackHandler.class).in(Singleton.class);                
+                bind(new TypeLiteral<TargetStore<VesselTarget>>() {}).to(targetStoreClazz).in(Singleton.class);
+                bind(AisTrackHandler.class).in(Singleton.class);
+                bind(AisTrackConfiguration.class).toInstance(cfg);                
             }
         };
         
         injector = Guice.createInjector(module);
-        
         handler = injector.getInstance(AisTrackHandler.class);
 
         // Load AisBus configuration
-        AisBusConfiguration aisBusConf = AisBusConfiguration.load(aisBusConfFile);
+        AisBusConfiguration aisBusConf = AisBusConfiguration.load(cfg.aisbusConfFile());
         aisBus = aisBusConf.getInstance();
         // Create distributor consumer and add to aisBus
         DistributerConsumer distributer = new DistributerConsumer();
@@ -112,7 +132,6 @@ public class AisTrackDaemon extends AbstractDaemon {
         if (aisBus != null) {
             aisBus.cancel();
         }
-        targetStore.close();
         super.shutdown();
     }
 

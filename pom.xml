@@ -28,6 +28,7 @@
 		<dependencies.aislib.version>2.2-SNAPSHOT</dependencies.aislib.version>
 		<dependencies.dma-commons.version>0.3-SNAPSHOT</dependencies.dma-commons.version>
 		<dependencies.guice-bridge.version>2.3.0</dependencies.guice-bridge.version>
+		<dependencies.owner.version>1.0.6</dependencies.owner.version>
 	</properties>
 
 	<dependencies>
@@ -101,7 +102,11 @@
 			<artifactId>jetty-annotations</artifactId>
 			<version>${dependencies.jetty.version}</version>
 		</dependency>
-
+		<dependency>
+			<groupId>org.aeonbits.owner</groupId>
+			<artifactId>owner</artifactId>
+			<version>${dependencies.owner.version}</version>
+		</dependency>
 	</dependencies>
 
 	<build>

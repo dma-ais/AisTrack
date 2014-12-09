@@ -14,6 +14,9 @@
  */
 package dk.dma.ais.track;
 
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -37,6 +40,13 @@ public class WebServer {
 
     public WebServer(int port) {
         server = new Server(port);
+        HttpConfiguration httpConfig = new HttpConfiguration();
+        httpConfig.setSendServerVersion(false);
+        HttpConnectionFactory httpFactory = new HttpConnectionFactory(httpConfig);
+        ServerConnector httpConnector = new ServerConnector(server, httpFactory);
+        httpConnector.setReuseAddress(true);
+        httpConnector.setPort(port);
+        server.setConnectors(new Connector[] { httpConnector });
         this.context = new ServletContextHandler(ServletContextHandler.SESSIONS);
     }
 
@@ -57,9 +67,8 @@ public class WebServer {
 
     public void start(Injector injector) throws Exception {
         final ResourceConfig rc = new ResourceConfig();
-        rc.register(injector.getInstance(VesselResource.class));         
-        
-        ((ServerConnector) server.getConnectors()[0]).setReuseAddress(true);
+        rc.register(injector.getInstance(VesselResource.class)); 
+               
         context.setContextPath("/");
         ServletHolder sho = new ServletHolder(new ServletContainer(rc));
         context.addServlet(sho, "/*");

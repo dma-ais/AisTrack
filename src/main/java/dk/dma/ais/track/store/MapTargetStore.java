@@ -18,8 +18,12 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.aeonbits.owner.Config.LoadPolicy;
+import org.aeonbits.owner.Config.LoadType;
+
 import dk.dma.ais.track.model.Target;
 
+@LoadPolicy(LoadType.MERGE)
 public class MapTargetStore<T extends Target> implements TargetStore<T> {
 
     private final Map<Integer, T> map = new ConcurrentHashMap<>();
@@ -38,18 +42,10 @@ public class MapTargetStore<T extends Target> implements TargetStore<T> {
     public int size() {
         return map.size();
     }
-    
+
     @Override
     public Collection<T> list() {
         return map.values();
-    }
-    
-    @Override
-    public void init() {
-    }
-    
-    @Override
-    public void close() {
     }
 
 }

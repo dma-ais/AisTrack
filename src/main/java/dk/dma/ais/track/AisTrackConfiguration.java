@@ -1,0 +1,56 @@
+/* Copyright (c) 2011 Danish Maritime Authority.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package dk.dma.ais.track;
+
+import java.lang.reflect.Method;
+import java.time.Duration;
+
+import org.aeonbits.owner.Config;
+import org.aeonbits.owner.Config.Sources;
+import org.aeonbits.owner.Converter;
+
+@Sources({ "file:aistrack.properties", "classpath:aistrack.properties" })
+public interface AisTrackConfiguration extends Config {
+
+    @DefaultValue("8080")
+    int port();
+
+    @DefaultValue("aisbus.xml")
+    String aisbusConfFile();
+
+    @DefaultValue("backup")
+    String backup();
+    
+    @DefaultValue("dk.dma.ais.track.store.MapDbTargetStore")
+    Class<?> targetStoreClass();
+    
+    // See https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-
+    @DefaultValue("P2D")
+    @ConverterClass(DurationConverter.class)
+    Duration targetExpire();
+    
+    @DefaultValue("PT10M")
+    @ConverterClass(DurationConverter.class)
+    Duration cleanupInterval();
+    
+    
+    public class DurationConverter implements Converter<Duration>  {
+        @Override
+        public Duration convert(Method targetMethod, String text) {
+            return Duration.parse(text);
+        }        
+    }
+
+}
