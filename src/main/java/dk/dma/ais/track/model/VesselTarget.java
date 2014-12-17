@@ -252,7 +252,11 @@ public class VesselTarget extends Target implements Serializable {
     public void setLastStaticReport(Date lastStaticReport) {
         this.lastStaticReport = lastStaticReport;
     }
-
+    
+    public boolean isValidPos() {
+        return lat != null && lon != null && cog != null && sog != null && lastPosReport != null;
+    }
+    
     public VesselTarget merge(VesselTarget t) {
         boolean posUpdate = t.getLastPosReport() != null;
         boolean classB = t.getTargetType() != null && t.getTargetType() == AisTargetType.B;

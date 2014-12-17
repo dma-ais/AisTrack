@@ -29,6 +29,7 @@ import javax.ws.rs.core.UriInfo;
 
 import dk.dma.ais.track.AisTrackHandler;
 import dk.dma.ais.track.VesselTargetFilter;
+import dk.dma.ais.track.model.PastTrackPosition;
 import dk.dma.ais.track.model.VesselTarget;
 
 @Singleton
@@ -77,8 +78,12 @@ public class VesselResource {
     
     @GET
     @Path("/track/{mmsi}")
-    public String getTrack(@PathParam("mmsi") Integer mmsi) {
-        return "{\"todo\" : \"yes\"}";
+    public List<PastTrackPosition> getTrack(@PathParam("mmsi") Integer mmsi) {
+        List<PastTrackPosition> track = handler.getPastTrack(mmsi);
+        if (track == null) {
+            throw new NotFoundException();
+        }
+        return track;
     }
     
 }

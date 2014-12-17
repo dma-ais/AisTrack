@@ -36,6 +36,7 @@ import dk.dma.ais.bus.consumer.DistributerConsumer;
 import dk.dma.ais.configuration.bus.AisBusConfiguration;
 import dk.dma.ais.track.model.VesselTarget;
 import dk.dma.ais.track.resource.VesselResource;
+import dk.dma.ais.track.store.PastTrackStore;
 import dk.dma.ais.track.store.TargetStore;
 import dk.dma.commons.app.AbstractDaemon;
 
@@ -84,6 +85,10 @@ public class AisTrackDaemon extends AbstractDaemon {
         @SuppressWarnings("unchecked")
         Class<TargetStore<VesselTarget>> targetStoreClazz = (Class<TargetStore<VesselTarget>>) cfg.targetStoreClass();
         LOG.info("Using " + targetStoreClazz + " target store");
+        
+        @SuppressWarnings("unchecked")
+        Class<PastTrackStore> trackStoreClazz = (Class<PastTrackStore>) cfg.pastTrackStoreClass();
+        LOG.info("Using " + trackStoreClazz + " track store");
 
         // Make web server
         webServer = new WebServer(cfg.port());
@@ -93,6 +98,7 @@ public class AisTrackDaemon extends AbstractDaemon {
             protected void configure() {
                 bind(VesselResource.class);
                 bind(new TypeLiteral<TargetStore<VesselTarget>>() {}).to(targetStoreClazz).in(Singleton.class);
+                bind(PastTrackStore.class).to(trackStoreClazz).in(Singleton.class);
                 bind(AisTrackHandler.class).in(Singleton.class);
                 bind(AisTrackConfiguration.class).toInstance(cfg);                
             }
@@ -112,7 +118,6 @@ public class AisTrackDaemon extends AbstractDaemon {
         aisBus.start();
         aisBus.startConsumers();
         aisBus.startProviders();
-
         
         webServer.start(injector);
         LOG.info("AisTrack started");

@@ -15,6 +15,7 @@
 package dk.dma.ais.track;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
@@ -28,7 +29,9 @@ import dk.dma.ais.message.AisMessage;
 import dk.dma.ais.message.AisTargetType;
 import dk.dma.ais.message.IVesselPositionMessage;
 import dk.dma.ais.packet.AisPacket;
+import dk.dma.ais.track.model.PastTrackPosition;
 import dk.dma.ais.track.model.VesselTarget;
+import dk.dma.ais.track.store.PastTrackStore;
 import dk.dma.ais.track.store.TargetStore;
 
 public class AisTrackHandler implements Consumer<AisPacket> {
@@ -36,10 +39,14 @@ public class AisTrackHandler implements Consumer<AisPacket> {
     static final Logger LOG = LoggerFactory.getLogger(AisTrackHandler.class);
 
     private final TargetStore<VesselTarget> vesselStore;
-    
+    private final PastTrackStore pastTrackStore;
+    private final boolean pastTrack;
+
     @Inject
-    public AisTrackHandler(TargetStore<VesselTarget> vesselStore) {
+    public AisTrackHandler(TargetStore<VesselTarget> vesselStore, PastTrackStore pastTrackStore, AisTrackConfiguration cfg) {
         this.vesselStore = vesselStore;
+        this.pastTrackStore = pastTrackStore;
+        this.pastTrack = cfg.pastTrack();
     }
 
     @Override
@@ -80,11 +87,12 @@ public class AisTrackHandler implements Consumer<AisPacket> {
         VesselTarget oldTarget = vesselStore.get(target.getMmsi());
 
         // Avoid updating with old pos message
+        boolean oldMessage = false;
         if (oldTarget != null && message instanceof IVesselPositionMessage) {
             Date oldPosReport = oldTarget.getLastPosReport();
             Date thisPosReport = target.getLastPosReport();
             if (oldPosReport != null && thisPosReport != null && oldPosReport.after(thisPosReport)) {
-                return;
+                oldMessage = true;
             }
         }
 
@@ -92,13 +100,23 @@ public class AisTrackHandler implements Consumer<AisPacket> {
         if (oldTarget != null && (target.getTargetType() != oldTarget.getTargetType())) {
             // Discard old target
             oldTarget = null;
+            if (pastTrack) {
+                pastTrackStore.remove(target.getMmsi());
+            }
         }
 
-        // Merge and save
-        if (oldTarget != null) {
-            target = oldTarget.merge(target);
+        // Save past track position
+        if (pastTrack) {
+            pastTrackStore.add(target);
         }
-        vesselStore.put(target);
+
+        if (!oldMessage) {
+            // Merge and save
+            if (oldTarget != null) {
+                target = oldTarget.merge(target);
+            }
+            vesselStore.put(target);
+        }
     }
 
     public VesselTarget getVessel(int mmsi) {
@@ -117,6 +135,22 @@ public class AisTrackHandler implements Consumer<AisPacket> {
             }
         }
         return targets;
+    }
+
+    public PastTrackStore getPastTrackStore() {
+        return pastTrackStore;
+    }
+
+    public List<PastTrackPosition> getPastTrack(int mmsi) {
+        List<PastTrackPosition> list = pastTrackStore.get(mmsi);
+        if (list == null) {
+            return null;
+        }
+        ArrayList<PastTrackPosition> track = new ArrayList<>(list);
+        Collections.sort(track);
+        
+        
+        return track;
     }
 
 }
