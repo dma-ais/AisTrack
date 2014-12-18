@@ -41,8 +41,7 @@ public interface AisTrackConfiguration extends Config {
     
     @DefaultValue("dk.dma.ais.track.store.MapPastTrackStore")
     Class<?> pastTrackStoreClass();
-    
-    // See https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-
+        
     @DefaultValue("P2D")
     @ConverterClass(DurationConverter.class)
     Duration targetExpire();
@@ -52,8 +51,13 @@ public interface AisTrackConfiguration extends Config {
     Duration cleanupInterval();
     
     @DefaultValue("100")
-    Integer minPastTrackDist();
+    Integer defaultMinPastTrackDist();
     
+    @DefaultValue("PT1H")
+    @ConverterClass(DurationConverter.class)
+    Duration pastTrackTtl();
+    
+    // See https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-
     public class DurationConverter implements Converter<Duration>  {
         @Override
         public Duration convert(Method targetMethod, String text) {

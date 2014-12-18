@@ -21,10 +21,12 @@ import dk.dma.ais.track.model.VesselTarget;
 
 public interface PastTrackStore {
     
-    List<PastTrackPosition> get(int mmsi);
+    List<PastTrackPosition> get(int mmsi, Integer minDist);
     
     void add(VesselTarget target);
     
     void remove(int mmsi);
+    
+    void close();
 
 }

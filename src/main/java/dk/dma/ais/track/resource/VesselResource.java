@@ -23,6 +23,7 @@ import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
@@ -78,8 +79,8 @@ public class VesselResource {
     
     @GET
     @Path("/track/{mmsi}")
-    public List<PastTrackPosition> getTrack(@PathParam("mmsi") Integer mmsi) {
-        List<PastTrackPosition> track = handler.getPastTrack(mmsi);
+    public List<PastTrackPosition> getTrack(@PathParam("mmsi") Integer mmsi, @QueryParam("minDist") Integer minDist) {
+        List<PastTrackPosition> track = handler.getPastTrack(mmsi, minDist);
         if (track == null) {
             throw new NotFoundException();
         }

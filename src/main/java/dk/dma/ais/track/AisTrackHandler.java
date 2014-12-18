@@ -140,9 +140,13 @@ public class AisTrackHandler implements Consumer<AisPacket> {
     public PastTrackStore getPastTrackStore() {
         return pastTrackStore;
     }
-
+    
     public List<PastTrackPosition> getPastTrack(int mmsi) {
-        List<PastTrackPosition> list = pastTrackStore.get(mmsi);
+        return getPastTrack(mmsi, null);
+    }
+
+    public List<PastTrackPosition> getPastTrack(int mmsi, Integer minDist) {
+        List<PastTrackPosition> list = pastTrackStore.get(mmsi, minDist);
         if (list == null) {
             return null;
         }
