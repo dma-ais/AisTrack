@@ -36,7 +36,9 @@ import dk.dma.ais.bus.consumer.DistributerConsumer;
 import dk.dma.ais.configuration.bus.AisBusConfiguration;
 import dk.dma.ais.track.model.VesselTarget;
 import dk.dma.ais.track.resource.VesselResource;
+import dk.dma.ais.track.store.MaxSpeedStore;
 import dk.dma.ais.track.store.PastTrackStore;
+import dk.dma.ais.track.store.SimpleMaxSpeedStore;
 import dk.dma.ais.track.store.TargetStore;
 import dk.dma.commons.app.AbstractDaemon;
 
@@ -101,7 +103,8 @@ public class AisTrackDaemon extends AbstractDaemon {
                 bind(new TypeLiteral<TargetStore<VesselTarget>>() {}).to(targetStoreClazz).in(Singleton.class);
                 bind(PastTrackStore.class).to(trackStoreClazz).in(Singleton.class);
                 bind(AisTrackHandler.class).in(Singleton.class);
-                bind(AisTrackConfiguration.class).toInstance(cfg);                
+                bind(AisTrackConfiguration.class).toInstance(cfg);
+                bind(MaxSpeedStore.class).to(SimpleMaxSpeedStore.class).in(Singleton.class);
             }
         };
         
@@ -109,7 +112,6 @@ public class AisTrackDaemon extends AbstractDaemon {
         handler = injector.getInstance(AisTrackHandler.class);
         pastTrackStore = injector.getInstance(PastTrackStore.class);
         
-
         // Load AisBus configuration
         AisBusConfiguration aisBusConf = AisBusConfiguration.load(cfg.aisbusConfFile());
         aisBus = aisBusConf.getInstance();

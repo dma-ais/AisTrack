@@ -29,8 +29,10 @@ import dk.dma.ais.message.AisMessage;
 import dk.dma.ais.message.AisTargetType;
 import dk.dma.ais.message.IVesselPositionMessage;
 import dk.dma.ais.packet.AisPacket;
+import dk.dma.ais.track.model.MaxSpeed;
 import dk.dma.ais.track.model.PastTrackPosition;
 import dk.dma.ais.track.model.VesselTarget;
+import dk.dma.ais.track.store.MaxSpeedStore;
 import dk.dma.ais.track.store.PastTrackStore;
 import dk.dma.ais.track.store.TargetStore;
 
@@ -40,13 +42,17 @@ public class AisTrackHandler implements Consumer<AisPacket> {
 
     private final TargetStore<VesselTarget> vesselStore;
     private final PastTrackStore pastTrackStore;
+    private final MaxSpeedStore maxSpeedStore;
     private final boolean pastTrack;
+    private final boolean registerMaxSpeed;
 
     @Inject
-    public AisTrackHandler(TargetStore<VesselTarget> vesselStore, PastTrackStore pastTrackStore, AisTrackConfiguration cfg) {
+    public AisTrackHandler(TargetStore<VesselTarget> vesselStore, PastTrackStore pastTrackStore, MaxSpeedStore maxSpeedStore, AisTrackConfiguration cfg) {
         this.vesselStore = vesselStore;
         this.pastTrackStore = pastTrackStore;
         this.pastTrack = cfg.pastTrack();
+        this.maxSpeedStore = maxSpeedStore;
+        this.registerMaxSpeed = cfg.registerMaxSpeed();
     }
 
     @Override
@@ -104,6 +110,11 @@ public class AisTrackHandler implements Consumer<AisPacket> {
                 pastTrackStore.remove(target.getMmsi());
             }
         }
+        
+        // Register max speed
+        if (registerMaxSpeed) {
+            maxSpeedStore.register(target);
+        }
 
         // Save past track position
         if (pastTrack) {
@@ -117,6 +128,7 @@ public class AisTrackHandler implements Consumer<AisPacket> {
             }
             vesselStore.put(target);
         }
+        
     }
 
     public VesselTarget getVessel(int mmsi) {
@@ -155,6 +167,10 @@ public class AisTrackHandler implements Consumer<AisPacket> {
         
         
         return track;
+    }
+    
+    public MaxSpeed getMaxSpeed(int mmsi) {
+        return maxSpeedStore.getMaxSpeed(mmsi);
     }
 
 }

@@ -36,6 +36,9 @@ public interface AisTrackConfiguration extends Config {
     @DefaultValue("true")
     Boolean pastTrack();
     
+    @DefaultValue("false")
+    Boolean registerMaxSpeed();
+    
     @DefaultValue("dk.dma.ais.track.store.MapDbTargetStore")
     Class<?> targetStoreClass();
     

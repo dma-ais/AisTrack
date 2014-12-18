@@ -30,6 +30,7 @@ import javax.ws.rs.core.UriInfo;
 
 import dk.dma.ais.track.AisTrackHandler;
 import dk.dma.ais.track.VesselTargetFilter;
+import dk.dma.ais.track.model.MaxSpeed;
 import dk.dma.ais.track.model.PastTrackPosition;
 import dk.dma.ais.track.model.VesselTarget;
 
@@ -85,6 +86,16 @@ public class VesselResource {
             throw new NotFoundException();
         }
         return track;
+    }
+    
+    @GET
+    @Path("/maxspeed/{mmsi}")    
+    public MaxSpeed getMaxSpeed(@PathParam("mmsi") Integer mmsi) {
+        MaxSpeed ms = handler.getMaxSpeed(mmsi);
+        if (ms == null) {
+            throw new NotFoundException();
+        }
+        return ms;
     }
     
 }
