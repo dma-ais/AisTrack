@@ -54,4 +54,8 @@ public class CacheTargetStore<T extends Target> implements TargetStore<T> {
         return cache.asMap().values();
     }
     
+    @Override
+    public void close() {
+    }
+    
 }

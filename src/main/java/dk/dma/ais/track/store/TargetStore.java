@@ -31,4 +31,6 @@ public interface TargetStore<T extends Target> {
     
     Collection<T> list();
     
+    void close();
+    
 }

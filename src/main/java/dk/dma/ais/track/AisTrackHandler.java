@@ -14,6 +14,7 @@
  */
 package dk.dma.ais.track;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -153,12 +154,8 @@ public class AisTrackHandler implements Consumer<AisPacket> {
         return pastTrackStore;
     }
     
-    public List<PastTrackPosition> getPastTrack(int mmsi) {
-        return getPastTrack(mmsi, null);
-    }
-
-    public List<PastTrackPosition> getPastTrack(int mmsi, Integer minDist) {
-        List<PastTrackPosition> list = pastTrackStore.get(mmsi, minDist);
+    public List<PastTrackPosition> getPastTrack(int mmsi, Integer minDist, Duration age) {
+        List<PastTrackPosition> list = pastTrackStore.get(mmsi, minDist, age);
         if (list == null) {
             return null;
         }
@@ -171,6 +168,16 @@ public class AisTrackHandler implements Consumer<AisPacket> {
     
     public MaxSpeed getMaxSpeed(int mmsi) {
         return maxSpeedStore.getMaxSpeed(mmsi);
+    }
+
+    public void stop() {
+        if (pastTrackStore != null) {
+            pastTrackStore.close();
+        }
+        if (vesselStore != null) {
+            vesselStore.close();
+        }
+        
     }
 
 }

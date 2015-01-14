@@ -14,6 +14,7 @@
  */
 package dk.dma.ais.track.resource;
 
+import java.time.Duration;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -80,8 +81,12 @@ public class VesselResource {
     
     @GET
     @Path("/track/{mmsi}")
-    public List<PastTrackPosition> getTrack(@PathParam("mmsi") Integer mmsi, @QueryParam("minDist") Integer minDist) {
-        List<PastTrackPosition> track = handler.getPastTrack(mmsi, minDist);
+    public List<PastTrackPosition> getTrack(@PathParam("mmsi") Integer mmsi, @QueryParam("minDist") Integer minDist, @QueryParam("age") String ageStr) {
+    	Duration age = null;
+    	if (ageStr != null) {
+    		age = Duration.parse(ageStr);
+    	}
+        List<PastTrackPosition> track = handler.getPastTrack(mmsi, minDist, age);
         if (track == null) {
             throw new NotFoundException();
         }

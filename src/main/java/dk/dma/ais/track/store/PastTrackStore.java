@@ -14,6 +14,7 @@
  */
 package dk.dma.ais.track.store;
 
+import java.time.Duration;
 import java.util.List;
 
 import dk.dma.ais.track.model.PastTrackPosition;
@@ -21,7 +22,7 @@ import dk.dma.ais.track.model.VesselTarget;
 
 public interface PastTrackStore {
     
-    List<PastTrackPosition> get(int mmsi, Integer minDist);
+    List<PastTrackPosition> get(int mmsi, Integer minDist, Duration age);
     
     void add(VesselTarget target);
     

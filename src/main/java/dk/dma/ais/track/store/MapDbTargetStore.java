@@ -49,7 +49,13 @@ public class MapDbTargetStore<T extends Target> implements TargetStore<T> {
         final long cleanupInterval = cfg.cleanupInterval().toMillis();
         db = DBMaker.newFileDB(new File(cfg.backup() + "/targetdb")).closeOnJvmShutdown().transactionDisable().make();
         map = db.getTreeMap("vesselTargets");
-        LOG.info(map.size() + " targets loaded");
+        try {
+            LOG.info(map.size() + " targets loaded");
+        } catch (Exception e) {
+            LOG.error("Failed to load database", e);
+            new File(cfg.backup() + "/targetdb").delete();
+            System.exit(1);
+        }
         ScheduledExecutorService expireExecutor = Executors.newSingleThreadScheduledExecutor();
         Runnable task = new Runnable() {
             @Override
@@ -61,12 +67,17 @@ public class MapDbTargetStore<T extends Target> implements TargetStore<T> {
                         return;
                     }
                     long now = System.currentTimeMillis();
+                    long removed = 0;
                     for (T target : map.values()) {
                         Date lastReport = target.getLastReport();
                         long age = now - lastReport.getTime();
                         if (age > expiryTime) {
                             map.remove(target.getMmsi());
+                            removed++;
                         }
+                    }
+                    if (removed > 0) {
+                        LOG.info("Cleaned up targets removed " + removed);
                     }
                     db.compact();
                 }
@@ -93,6 +104,10 @@ public class MapDbTargetStore<T extends Target> implements TargetStore<T> {
     @Override
     public Collection<T> list() {
         return map.values();
+    }
+    
+    @Override
+    public void close() {
     }
 
 }

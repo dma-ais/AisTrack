@@ -47,5 +47,10 @@ public class MapTargetStore<T extends Target> implements TargetStore<T> {
     public Collection<T> list() {
         return map.values();
     }
+    
+    @Override
+    public void close() {        
+        
+    }
 
 }

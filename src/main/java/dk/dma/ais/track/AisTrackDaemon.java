@@ -61,7 +61,6 @@ public class AisTrackDaemon extends AbstractDaemon {
     private WebServer webServer;
     private AisBus aisBus;
     private AisTrackHandler handler;
-    private PastTrackStore pastTrackStore;
 
     @Override
     protected void runDaemon(Injector injector) throws Exception {
@@ -82,7 +81,13 @@ public class AisTrackDaemon extends AbstractDaemon {
         if (confFile != null) {
             confProps.load(new FileInputStream(confFile));
         }        
-        AisTrackConfiguration cfg = ConfigCache.getOrCreate(AisTrackConfiguration.class, confProps, argProps);
+        AisTrackConfiguration cfg = ConfigCache.getOrCreate(AisTrackConfiguration.class, argProps, confProps);
+        StringBuilder buf = new StringBuilder();
+        buf.append("Settings:\n");
+        for (String key : cfg.propertyNames()) {
+            buf.append("\t" + key + ": " + cfg.getProperty(key) + "\n");
+        }
+        LOG.info(buf.toString());
         
         // Get target store class
         @SuppressWarnings("unchecked")
@@ -110,7 +115,6 @@ public class AisTrackDaemon extends AbstractDaemon {
         
         injector = Guice.createInjector(module);
         handler = injector.getInstance(AisTrackHandler.class);
-        pastTrackStore = injector.getInstance(PastTrackStore.class);
         
         // Load AisBus configuration
         AisBusConfiguration aisBusConf = AisBusConfiguration.load(cfg.aisbusConfFile());
@@ -142,7 +146,9 @@ public class AisTrackDaemon extends AbstractDaemon {
         if (aisBus != null) {
             aisBus.cancel();
         }
-        pastTrackStore.close();
+        if (handler != null) {
+            handler.stop();
+        }
         super.shutdown();
     }
 

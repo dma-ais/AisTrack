@@ -22,7 +22,7 @@ public class PastTrack implements Serializable {
         return new ArrayList<PastTrackPosition>(track);
     }
 
-    public synchronized void trim(long ttl) {
+    public synchronized int trim(long ttl) {
         long maxAge = System.currentTimeMillis() - ttl;
         List<PastTrackPosition> removeSet = new ArrayList<>();
         for (PastTrackPosition pos : track) {
@@ -35,8 +35,9 @@ public class PastTrack implements Serializable {
         for (PastTrackPosition old : removeSet) {
             track.remove(old);
         }
+        return removeSet.size();
     }
-    
+
     public synchronized PastTrackPosition newestPos() {
         if (track.size() > 0) {
             return track.last();
@@ -44,8 +45,13 @@ public class PastTrack implements Serializable {
         return null;
     }
 
-    public static List<PastTrackPosition> downSample(List<PastTrackPosition> list, int minPastTrackDist) {
-        List<PastTrackPosition> downSampled = new ArrayList<>();
+    public synchronized int size() {
+        return track.size();
+    }
+
+    public static List<PastTrackPosition> downSample(List<PastTrackPosition> list, int minPastTrackDist, long age) {
+        long maxAge = System.currentTimeMillis() - age;
+        ArrayList<PastTrackPosition> downSampled = new ArrayList<>();
         if (list.size() == 0) {
             return downSampled;
         }
@@ -55,7 +61,7 @@ public class PastTrack implements Serializable {
         while (i < list.size()) {
             PastTrackPosition pos = list.get(i);
             n = i + 1;
-            while (n < list.size()) {   
+            while (n < list.size()) {
                 PastTrackPosition next = list.get(n);
                 if (distance(pos, next) > minPastTrackDist) {
                     downSampled.add(next);
@@ -65,11 +71,15 @@ public class PastTrack implements Serializable {
             }
             i = n;
         }
-        return downSampled;
+        int start = 0;
+        while (start < downSampled.size() && downSampled.get(start).getTime() < maxAge) {
+            start++;
+        }
+        return downSampled.subList(start, downSampled.size());
     }
-    
+
     public static double distance(PastTrackPosition pos1, PastTrackPosition pos2) {
-        return Position.create(pos1.getLat(), pos1.getLon()).rhumbLineDistanceTo(Position.create(pos2.getLat(), pos2.getLon()));        
+        return Position.create(pos1.getLat(), pos1.getLon()).rhumbLineDistanceTo(Position.create(pos2.getLat(), pos2.getLon()));
     }
 
 }
