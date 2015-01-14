@@ -47,7 +47,7 @@ public class MapDbTargetStore<T extends Target> implements TargetStore<T> {
         Files.createDirectories(Paths.get(cfg.backup()));
         final long expiryTime = cfg.targetExpire().toMillis();
         final long cleanupInterval = cfg.cleanupInterval().toMillis();
-        db = DBMaker.newFileDB(new File(cfg.backup() + "/targetdb")).closeOnJvmShutdown().transactionDisable().make();
+        db = DBMaker.newFileDB(new File(cfg.backup() + "/targetdb")).transactionDisable().make();
         map = db.getTreeMap("vesselTargets");
         try {
             LOG.info(map.size() + " targets loaded");
@@ -108,6 +108,7 @@ public class MapDbTargetStore<T extends Target> implements TargetStore<T> {
     
     @Override
     public void close() {
+        db.close();
     }
 
 }

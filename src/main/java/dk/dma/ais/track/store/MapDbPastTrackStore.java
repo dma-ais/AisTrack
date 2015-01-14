@@ -48,7 +48,7 @@ public class MapDbPastTrackStore extends AbstractPastTrackStore implements PastT
         super(cfg);
         LOG.info("Loading past track database using backup dir: " + cfg.backup());
         Files.createDirectories(Paths.get(cfg.backup()));
-        db = DBMaker.newFileDB(new File(cfg.backup() + "/pasttrackdb")).closeOnJvmShutdown().transactionDisable().make();
+        db = DBMaker.newFileDB(new File(cfg.backup() + "/pasttrackdb")).transactionDisable().make();
         trackMap = db.getTreeMap("pastTrack");
         try {
             LOG.info(trackMap.size() + " past tracks loaded");
@@ -111,7 +111,7 @@ public class MapDbPastTrackStore extends AbstractPastTrackStore implements PastT
 
     @Override
     public void close() {
-        
+        db.close();
     }
 
 }
