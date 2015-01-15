@@ -14,7 +14,6 @@
  */
 package dk.dma.ais.track.store;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -23,12 +22,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
 import org.mapdb.BTreeMap;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,25 +38,23 @@ public class MapDbPastTrackStore extends AbstractPastTrackStore implements PastT
 
     static final Logger LOG = LoggerFactory.getLogger(MapDbPastTrackStore.class);
 
-    private final DB db;
+    private final MapDb<Integer, PastTrack> db;
     private final BTreeMap<Integer, PastTrack> trackMap;
+    private final ScheduledExecutorService expireExecutor;
 
     @Inject
     public MapDbPastTrackStore(AisTrackConfiguration cfg) throws IOException {
         super(cfg);
         LOG.info("Loading past track database using backup dir: " + cfg.backup());
         Files.createDirectories(Paths.get(cfg.backup()));
-        db = DBMaker.newFileDB(new File(cfg.backup() + "/pasttrackdb")).transactionDisable().make();
-        trackMap = db.getTreeMap("pastTrack");
-        try {
-            LOG.info(trackMap.size() + " past tracks loaded");
-        } catch (Exception e) {
-            LOG.error("Failed to load database", e);
-            new File(cfg.backup() + "/pasttrackdb").delete();
-            System.exit(1);
+        db = MapDb.create(cfg.backup(), "pasttrackdb");
+        if (db == null) {
+            System.exit(-1);
         }
+        trackMap = db.getMap();
+        LOG.info(trackMap.size() + " tracks loaded");
         final long cleanupInterval = cfg.cleanupInterval().toMillis();
-        ScheduledExecutorService expireExecutor = Executors.newSingleThreadScheduledExecutor();
+        expireExecutor = Executors.newSingleThreadScheduledExecutor();
         Runnable task = new Runnable() {
             @Override
             public void run() {
@@ -80,7 +76,7 @@ public class MapDbPastTrackStore extends AbstractPastTrackStore implements PastT
                     if (removedPoints > 0 || removedTracks > 0) {
                         LOG.info("Cleaned up past track removed " + removedPoints + " points and " + removedTracks + " tracks");
                     }
-                    db.compact();
+                    db.getDb().compact();
                 }
             }
         };
@@ -111,7 +107,16 @@ public class MapDbPastTrackStore extends AbstractPastTrackStore implements PastT
 
     @Override
     public void close() {
+        LOG.info("Stopping past track store expiry thread");
+        expireExecutor.shutdownNow();
+        try {
+            expireExecutor.awaitTermination(60, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        LOG.info("Closing database");
         db.close();
+        LOG.info("Database closed");
     }
 
 }

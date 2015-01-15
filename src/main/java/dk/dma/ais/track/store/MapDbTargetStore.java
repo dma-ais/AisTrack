@@ -14,7 +14,6 @@
  */
 package dk.dma.ais.track.store;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -23,11 +22,10 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +37,8 @@ public class MapDbTargetStore<T extends Target> implements TargetStore<T> {
     static final Logger LOG = LoggerFactory.getLogger(MapDbTargetStore.class);
 
     private final Map<Integer, T> map;
-    private final DB db;
+    private final MapDb<Integer, T> db;
+    private final ScheduledExecutorService expireExecutor;
 
     @Inject
     public MapDbTargetStore(AisTrackConfiguration cfg) throws IOException {
@@ -47,16 +46,13 @@ public class MapDbTargetStore<T extends Target> implements TargetStore<T> {
         Files.createDirectories(Paths.get(cfg.backup()));
         final long expiryTime = cfg.targetExpire().toMillis();
         final long cleanupInterval = cfg.cleanupInterval().toMillis();
-        db = DBMaker.newFileDB(new File(cfg.backup() + "/targetdb")).transactionDisable().make();
-        map = db.getTreeMap("vesselTargets");
-        try {
-            LOG.info(map.size() + " targets loaded");
-        } catch (Exception e) {
-            LOG.error("Failed to load database", e);
-            new File(cfg.backup() + "/targetdb").delete();
-            System.exit(1);
+        db = MapDb.create(cfg.backup(), "targetdb");
+        if (db == null) {
+            System.exit(-1);
         }
-        ScheduledExecutorService expireExecutor = Executors.newSingleThreadScheduledExecutor();
+        map = db.getMap();
+        LOG.info(map.size() + " targets loaded");
+        expireExecutor = Executors.newSingleThreadScheduledExecutor();
         Runnable task = new Runnable() {
             @Override
             public void run() {
@@ -79,7 +75,7 @@ public class MapDbTargetStore<T extends Target> implements TargetStore<T> {
                     if (removed > 0) {
                         LOG.info("Cleaned up targets removed " + removed);
                     }
-                    db.compact();
+                    db.getDb().compact();
                 }
             }
         };
@@ -108,7 +104,16 @@ public class MapDbTargetStore<T extends Target> implements TargetStore<T> {
     
     @Override
     public void close() {
+        LOG.info("Stopping target store expiry thread");
+        expireExecutor.shutdownNow();
+        try {
+            expireExecutor.awaitTermination(60, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        LOG.info("Closing database");
         db.close();
+        LOG.info("Database closed");
     }
 
 }

@@ -142,9 +142,14 @@ public class AisTrackDaemon extends AbstractDaemon {
             } catch (Exception e) {
                 LOG.info("Failed to stop web server", e);
             }
-        }
+        }        
         if (aisBus != null) {
             aisBus.cancel();
+        }
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
         if (handler != null) {
             handler.stop();
