@@ -177,7 +177,9 @@ public class AisTrackHandler implements Consumer<AisPacket> {
         if (vesselStore != null) {
             vesselStore.close();
         }
-        
+        if (maxSpeedStore != null) {
+            maxSpeedStore.close();
+        }        
     }
 
 }

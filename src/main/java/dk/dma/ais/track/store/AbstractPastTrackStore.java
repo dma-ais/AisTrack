@@ -22,30 +22,29 @@ import dk.dma.ais.track.AisTrackConfiguration;
 import dk.dma.ais.track.model.PastTrackPosition;
 
 public abstract class AbstractPastTrackStore implements PastTrackStore {
-	
-    protected final int defaultMinPastTrackDist; 
+
+    protected final int defaultMinPastTrackDist;
     protected final long pastTrackTtl;
     protected final long expiryTime;
 
-	public AbstractPastTrackStore(AisTrackConfiguration cfg) {
+    public AbstractPastTrackStore(AisTrackConfiguration cfg) {
         defaultMinPastTrackDist = cfg.defaultMinPastTrackDist();
         pastTrackTtl = cfg.pastTrackTtl().toMillis();
         expiryTime = cfg.targetExpire().toMillis();
-	}
-	
-	protected List<PastTrackPosition> get(int mmsi, Integer minDist, Duration age, Map<Integer, PastTrack> map) {
-		if (minDist == null) {
+    }
+
+    protected List<PastTrackPosition> get(int mmsi, Integer minDist, Duration age, Map<Integer, PastTrack> map) {
+        if (minDist == null) {
             minDist = defaultMinPastTrackDist;
         }
-		
+
         PastTrack track = map.get(mmsi);
         if (track == null) {
             return null;
         }
-        long ageTtl = age != null ? age.toMillis() : Long.MAX_VALUE;        
+        long ageTtl = age != null ? age.toMillis() : Long.MAX_VALUE;
         track.trim(pastTrackTtl);
         return PastTrack.downSample(track.asList(), minDist, ageTtl);
-	}
-	
-	
+    }
+
 }

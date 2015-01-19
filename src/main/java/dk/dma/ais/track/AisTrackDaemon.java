@@ -38,7 +38,6 @@ import dk.dma.ais.track.model.VesselTarget;
 import dk.dma.ais.track.resource.VesselResource;
 import dk.dma.ais.track.store.MaxSpeedStore;
 import dk.dma.ais.track.store.PastTrackStore;
-import dk.dma.ais.track.store.SimpleMaxSpeedStore;
 import dk.dma.ais.track.store.TargetStore;
 import dk.dma.commons.app.AbstractDaemon;
 
@@ -94,9 +93,14 @@ public class AisTrackDaemon extends AbstractDaemon {
         Class<TargetStore<VesselTarget>> targetStoreClazz = (Class<TargetStore<VesselTarget>>) cfg.targetStoreClass();
         LOG.info("Using " + targetStoreClazz + " target store");
         
+        // Get max speed store class
         @SuppressWarnings("unchecked")
         Class<PastTrackStore> trackStoreClazz = (Class<PastTrackStore>) cfg.pastTrackStoreClass();
         LOG.info("Using " + trackStoreClazz + " track store");
+        
+        @SuppressWarnings("unchecked")
+        Class<MaxSpeedStore> maxSpeedStoreClazz = (Class<MaxSpeedStore>) cfg.maxSpeedStoreClass();
+        LOG.info("Using " + maxSpeedStoreClazz + " max speed store");        
 
         // Make web server
         webServer = new WebServer(cfg.port());
@@ -109,7 +113,7 @@ public class AisTrackDaemon extends AbstractDaemon {
                 bind(PastTrackStore.class).to(trackStoreClazz).in(Singleton.class);
                 bind(AisTrackHandler.class).in(Singleton.class);
                 bind(AisTrackConfiguration.class).toInstance(cfg);
-                bind(MaxSpeedStore.class).to(SimpleMaxSpeedStore.class).in(Singleton.class);
+                bind(MaxSpeedStore.class).to(maxSpeedStoreClazz).in(Singleton.class);
             }
         };
         

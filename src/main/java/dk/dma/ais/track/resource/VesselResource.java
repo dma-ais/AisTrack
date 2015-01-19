@@ -39,14 +39,14 @@ import dk.dma.ais.track.model.VesselTarget;
 @Path("/target/vessel")
 @Produces(MediaType.APPLICATION_JSON)
 public class VesselResource {
-        
+
     final AisTrackHandler handler;
-    
+
     @Inject
     public VesselResource(AisTrackHandler handler) {
         this.handler = handler;
     }
-    
+
     @GET
     @Path("{mmsi}")
     public VesselTarget getTarget(@PathParam("mmsi") Integer mmsi) {
@@ -56,13 +56,13 @@ public class VesselResource {
         }
         return target;
     }
-    
+
     /**
-     * Filtering parameters:
-     *  - ttlLive: See https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-
-     *  - ttlSat: See https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-
-     *  - mmsi: Filter on mmsi number, multiple arguments can be given
-     *  - geo: Filter on geography, multiple arguments on the form: 'circle,lat,lon,radius(m)' or 'bb,lat1,lon1,lat2,lon2'  (bounding box) 
+     * Filtering parameters: - ttlLive: See
+     * https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence- - ttlSat: See
+     * https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence- - mmsi: Filter on mmsi
+     * number, multiple arguments can be given - geo: Filter on geography, multiple arguments on the form:
+     * 'circle,lat,lon,radius(m)' or 'bb,lat1,lon1,lat2,lon2' (bounding box)
      * 
      * @param uriInfo
      * @return
@@ -72,29 +72,30 @@ public class VesselResource {
     public List<VesselTarget> getTargetList(@Context UriInfo uriInfo) {
         return handler.getVesselList(VesselTargetFilter.create(uriInfo));
     }
-    
+
     @GET
     @Path("/count")
     public String getTargetCount(@Context UriInfo uriInfo) {
         return String.format("{\"count\" : %d}", handler.getVesselList(VesselTargetFilter.create(uriInfo)).size());
     }
-    
+
     @GET
     @Path("/track/{mmsi}")
-    public List<PastTrackPosition> getTrack(@PathParam("mmsi") Integer mmsi, @QueryParam("minDist") Integer minDist, @QueryParam("age") String ageStr) {
-    	Duration age = null;
-    	if (ageStr != null) {
-    		age = Duration.parse(ageStr);
-    	}
+    public List<PastTrackPosition> getTrack(@PathParam("mmsi") Integer mmsi, @QueryParam("minDist") Integer minDist,
+            @QueryParam("age") String ageStr) {
+        Duration age = null;
+        if (ageStr != null) {
+            age = Duration.parse(ageStr);
+        }
         List<PastTrackPosition> track = handler.getPastTrack(mmsi, minDist, age);
         if (track == null) {
             throw new NotFoundException();
         }
         return track;
     }
-    
+
     @GET
-    @Path("/maxspeed/{mmsi}")    
+    @Path("/maxspeed/{mmsi}")
     public MaxSpeed getMaxSpeed(@PathParam("mmsi") Integer mmsi) {
         MaxSpeed ms = handler.getMaxSpeed(mmsi);
         if (ms == null) {
@@ -102,5 +103,5 @@ public class VesselResource {
         }
         return ms;
     }
-    
+
 }

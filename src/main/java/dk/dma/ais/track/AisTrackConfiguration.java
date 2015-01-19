@@ -41,12 +41,18 @@ public interface AisTrackConfiguration extends Accessible {
 
     @DefaultValue("false")
     Boolean registerMaxSpeed();
+    
+    @DefaultValue("30")
+    int maxSpeedRingSize();
 
     @DefaultValue("dk.dma.ais.track.store.MapDbTargetStore")
     Class<?> targetStoreClass();
 
     @DefaultValue("dk.dma.ais.track.store.MapPastTrackStore")
     Class<?> pastTrackStoreClass();
+    
+    @DefaultValue("dk.dma.ais.track.store.MapMaxSpeedStore")
+    Class<?> maxSpeedStoreClass();
 
     @DefaultValue("P2D")
     @ConverterClass(DurationConverter.class)
