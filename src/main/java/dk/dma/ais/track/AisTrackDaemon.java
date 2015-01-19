@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.beust.jcommander.Parameter;
+import com.codahale.metrics.MetricRegistry;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -35,6 +36,7 @@ import dk.dma.ais.bus.AisBus;
 import dk.dma.ais.bus.consumer.DistributerConsumer;
 import dk.dma.ais.configuration.bus.AisBusConfiguration;
 import dk.dma.ais.track.model.VesselTarget;
+import dk.dma.ais.track.resource.MetricsResource;
 import dk.dma.ais.track.resource.VesselResource;
 import dk.dma.ais.track.store.MaxSpeedStore;
 import dk.dma.ais.track.store.PastTrackStore;
@@ -109,11 +111,13 @@ public class AisTrackDaemon extends AbstractDaemon {
             @Override
             protected void configure() {
                 bind(VesselResource.class);
+                bind(MetricsResource.class);
                 bind(new TypeLiteral<TargetStore<VesselTarget>>() {}).to(targetStoreClazz).in(Singleton.class);
                 bind(PastTrackStore.class).to(trackStoreClazz).in(Singleton.class);
                 bind(AisTrackHandler.class).in(Singleton.class);
                 bind(AisTrackConfiguration.class).toInstance(cfg);
                 bind(MaxSpeedStore.class).to(maxSpeedStoreClazz).in(Singleton.class);
+                bind(MetricRegistry.class).in(Singleton.class);
             }
         };
         

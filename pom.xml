@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>dk.dma</groupId>
 		<artifactId>dma-root-pom</artifactId>
-		<version>21</version>
+		<version>22</version>
 	</parent>
 
 	<groupId>dk.dma.ais.track</groupId>
@@ -106,6 +106,21 @@
 			<groupId>org.aeonbits.owner</groupId>
 			<artifactId>owner</artifactId>
 			<version>${dependencies.owner.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.dropwizard.metrics</groupId>
+			<artifactId>metrics-core</artifactId>
+			<version>${dependencies.metrics.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.dropwizard.metrics</groupId>
+			<artifactId>metrics-json</artifactId>
+			<version>${dependencies.metrics.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.dropwizard.metrics</groupId>
+			<artifactId>metrics-jersey2</artifactId>
+			<version>${dependencies.metrics.version}</version>
 		</dependency>
 	</dependencies>
 

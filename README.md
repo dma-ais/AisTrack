@@ -56,3 +56,26 @@ Past track for the given vessel. The following GET arguments can be supplied for
 	
 The maximum speed encountered for the given vessel.
 
+#### Metrics
+
+A complete set of metrics for system can be retrieved here
+
+	http://localhost:8080/metrics/all
+	
+To monitor the rate of a meter or timer the following call can be used
+
+	http://localhost:8080/metrics/flow/{meter}[?expected=flow]
+	
+The argument `expected` can be used to indicate what is the expected flow. Everything else is an error. Default is 0.0.
+Example:
+
+	http://localhost:8080/metrics/flow/messages?expected=300
+
+Output:
+
+	{
+		rate: "688.3288056391231",
+		expexted: "300.0",
+		status: "ok"
+	}
+	

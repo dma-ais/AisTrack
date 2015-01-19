@@ -26,6 +26,9 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+
 import dk.dma.ais.message.AisMessage;
 import dk.dma.ais.message.AisTargetType;
 import dk.dma.ais.message.IVesselPositionMessage;
@@ -46,14 +49,16 @@ public class AisTrackHandler implements Consumer<AisPacket> {
     private final MaxSpeedStore maxSpeedStore;
     private final boolean pastTrack;
     private final boolean registerMaxSpeed;
+    private final Meter messages;
 
     @Inject
-    public AisTrackHandler(TargetStore<VesselTarget> vesselStore, PastTrackStore pastTrackStore, MaxSpeedStore maxSpeedStore, AisTrackConfiguration cfg) {
+    public AisTrackHandler(TargetStore<VesselTarget> vesselStore, PastTrackStore pastTrackStore, MaxSpeedStore maxSpeedStore, AisTrackConfiguration cfg, MetricRegistry metrics) {
         this.vesselStore = vesselStore;
         this.pastTrackStore = pastTrackStore;
         this.pastTrack = cfg.pastTrack();
         this.maxSpeedStore = maxSpeedStore;
         this.registerMaxSpeed = cfg.registerMaxSpeed();
+        this.messages = metrics.meter("messages");
     }
 
     @Override
@@ -80,6 +85,7 @@ public class AisTrackHandler implements Consumer<AisPacket> {
     }
 
     private void handleVessel(AisPacket packet) {
+        messages.mark();
         AisMessage message = packet.tryGetAisMessage();
 
         // Reject invalid MMSI numbers

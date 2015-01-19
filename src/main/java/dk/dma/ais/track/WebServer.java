@@ -26,8 +26,11 @@ import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.jersey2.MetricsFeature;
 import com.google.inject.Injector;
 
+import dk.dma.ais.track.resource.MetricsResource;
 import dk.dma.ais.track.resource.VesselResource;
 
 public class WebServer {
@@ -67,7 +70,9 @@ public class WebServer {
 
     public void start(Injector injector) throws Exception {
         final ResourceConfig rc = new ResourceConfig();
-        rc.register(injector.getInstance(VesselResource.class)); 
+        rc.register(injector.getInstance(VesselResource.class));
+        rc.register(injector.getInstance(MetricsResource.class));
+        rc.register(new MetricsFeature(injector.getInstance(MetricRegistry.class)));
                
         context.setContextPath("/");
         ServletHolder sho = new ServletHolder(new ServletContainer(rc));

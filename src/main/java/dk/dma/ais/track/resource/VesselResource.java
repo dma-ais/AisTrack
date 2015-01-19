@@ -29,6 +29,11 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.codahale.metrics.annotation.Timed;
+
 import dk.dma.ais.track.AisTrackHandler;
 import dk.dma.ais.track.VesselTargetFilter;
 import dk.dma.ais.track.model.MaxSpeed;
@@ -39,6 +44,8 @@ import dk.dma.ais.track.model.VesselTarget;
 @Path("/target/vessel")
 @Produces(MediaType.APPLICATION_JSON)
 public class VesselResource {
+    
+    static final Logger LOG = LoggerFactory.getLogger(VesselResource.class);
 
     final AisTrackHandler handler;
 
@@ -47,8 +54,9 @@ public class VesselResource {
         this.handler = handler;
     }
 
+    @Timed
     @GET
-    @Path("{mmsi}")
+    @Path("{mmsi}")   
     public VesselTarget getTarget(@PathParam("mmsi") Integer mmsi) {
         VesselTarget target = handler.getVessel(mmsi);
         if (target == null) {
@@ -67,18 +75,21 @@ public class VesselResource {
      * @param uriInfo
      * @return
      */
+    @Timed
     @GET
     @Path("/list")
     public List<VesselTarget> getTargetList(@Context UriInfo uriInfo) {
         return handler.getVesselList(VesselTargetFilter.create(uriInfo));
     }
 
+    @Timed
     @GET
     @Path("/count")
     public String getTargetCount(@Context UriInfo uriInfo) {
         return String.format("{\"count\" : %d}", handler.getVesselList(VesselTargetFilter.create(uriInfo)).size());
     }
 
+    @Timed
     @GET
     @Path("/track/{mmsi}")
     public List<PastTrackPosition> getTrack(@PathParam("mmsi") Integer mmsi, @QueryParam("minDist") Integer minDist,
@@ -94,6 +105,7 @@ public class VesselResource {
         return track;
     }
 
+    @Timed
     @GET
     @Path("/maxspeed/{mmsi}")
     public MaxSpeed getMaxSpeed(@PathParam("mmsi") Integer mmsi) {
