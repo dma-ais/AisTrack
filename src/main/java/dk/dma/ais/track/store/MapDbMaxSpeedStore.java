@@ -117,6 +117,11 @@ public class MapDbMaxSpeedStore implements MaxSpeedStore {
         db.close();
         LOG.info("Database closed");
     }
+    
+    @Override
+    public int size() {
+        return maxSpeedMap.size();
+    }
 
 
 }

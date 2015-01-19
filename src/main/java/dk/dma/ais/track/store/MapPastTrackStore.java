@@ -85,5 +85,10 @@ public class MapPastTrackStore extends AbstractPastTrackStore implements PastTra
     @Override
     public void close() {
     }
+    
+    @Override
+    public int size() {
+        return trackMap.size();
+    }
 
 }

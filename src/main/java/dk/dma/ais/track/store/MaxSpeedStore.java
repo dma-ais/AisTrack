@@ -24,5 +24,7 @@ public interface MaxSpeedStore {
     MaxSpeed getMaxSpeed(int mmsi);
     
     void close();
+    
+    int size();
 
 }

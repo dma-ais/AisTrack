@@ -29,5 +29,7 @@ public interface PastTrackStore {
     void remove(int mmsi);
     
     void close();
+    
+    int size();
 
 }

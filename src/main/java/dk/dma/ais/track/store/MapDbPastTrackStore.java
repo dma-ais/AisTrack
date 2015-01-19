@@ -118,5 +118,10 @@ public class MapDbPastTrackStore extends AbstractPastTrackStore implements PastT
         db.close();
         LOG.info("Database closed");
     }
+    
+    @Override
+    public int size() {
+        return trackMap.size();
+    }
 
 }

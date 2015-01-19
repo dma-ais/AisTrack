@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 
@@ -52,17 +53,38 @@ public class AisTrackHandler implements Consumer<AisPacket> {
     private final Meter messages;
 
     @Inject
-    public AisTrackHandler(TargetStore<VesselTarget> vesselStore, PastTrackStore pastTrackStore, MaxSpeedStore maxSpeedStore, AisTrackConfiguration cfg, MetricRegistry metrics) {
+    public AisTrackHandler(TargetStore<VesselTarget> vesselStore, PastTrackStore pastTrackStore, MaxSpeedStore maxSpeedStore,
+            AisTrackConfiguration cfg, MetricRegistry metrics) {
         this.vesselStore = vesselStore;
         this.pastTrackStore = pastTrackStore;
         this.pastTrack = cfg.pastTrack();
         this.maxSpeedStore = maxSpeedStore;
         this.registerMaxSpeed = cfg.registerMaxSpeed();
         this.messages = metrics.meter("messages");
+        metrics.register(MetricRegistry.name("vesselStore", "size"), new Gauge<Integer>() {
+            @Override
+            public Integer getValue() {
+                return vesselStore.size();
+            }
+        });
+        metrics.register(MetricRegistry.name("pastTrackStore", "size"), new Gauge<Integer>() {
+            @Override
+            public Integer getValue() {
+                return pastTrackStore.size();
+            }
+        });
+        
+        metrics.register(MetricRegistry.name("maxSpeedStore", "size"), new Gauge<Integer>() {
+            @Override
+            public Integer getValue() {
+                return maxSpeedStore.size();
+            }
+        });       
     }
 
     @Override
     public void accept(AisPacket packet) {
+        messages.mark();
         // Must have valid AIS message
         AisMessage message = packet.tryGetAisMessage();
         if (message == null) {
@@ -84,8 +106,7 @@ public class AisTrackHandler implements Consumer<AisPacket> {
         }
     }
 
-    private void handleVessel(AisPacket packet) {
-        messages.mark();
+    private void handleVessel(AisPacket packet) {        
         AisMessage message = packet.tryGetAisMessage();
 
         // Reject invalid MMSI numbers
@@ -117,7 +138,7 @@ public class AisTrackHandler implements Consumer<AisPacket> {
                 pastTrackStore.remove(target.getMmsi());
             }
         }
-        
+
         // Register max speed
         if (registerMaxSpeed) {
             maxSpeedStore.register(target);
@@ -135,7 +156,7 @@ public class AisTrackHandler implements Consumer<AisPacket> {
             }
             vesselStore.put(target);
         }
-        
+
     }
 
     public VesselTarget getVessel(int mmsi) {
@@ -159,7 +180,7 @@ public class AisTrackHandler implements Consumer<AisPacket> {
     public PastTrackStore getPastTrackStore() {
         return pastTrackStore;
     }
-    
+
     public List<PastTrackPosition> getPastTrack(int mmsi, Integer minDist, Duration age) {
         List<PastTrackPosition> list = pastTrackStore.get(mmsi, minDist, age);
         if (list == null) {
@@ -167,11 +188,10 @@ public class AisTrackHandler implements Consumer<AisPacket> {
         }
         ArrayList<PastTrackPosition> track = new ArrayList<>(list);
         Collections.sort(track);
-        
-        
+
         return track;
     }
-    
+
     public MaxSpeed getMaxSpeed(int mmsi) {
         return maxSpeedStore.getMaxSpeed(mmsi);
     }
@@ -185,7 +205,7 @@ public class AisTrackHandler implements Consumer<AisPacket> {
         }
         if (maxSpeedStore != null) {
             maxSpeedStore.close();
-        }        
+        }
     }
 
 }

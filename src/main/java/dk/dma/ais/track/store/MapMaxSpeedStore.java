@@ -50,5 +50,10 @@ public class MapMaxSpeedStore implements MaxSpeedStore {
     @Override
     public void close() {
     }
+    
+    @Override
+    public int size() {
+        return maxSpeedMap.size();
+    }
 
 }

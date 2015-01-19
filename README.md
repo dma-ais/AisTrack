@@ -67,15 +67,18 @@ To monitor the rate of a meter or timer the following call can be used
 	http://localhost:8080/metrics/flow/{meter}[?expected=flow]
 	
 The argument `expected` can be used to indicate what is the expected flow. Everything else is an error. Default is 0.0.
-Example:
+Example
 
 	http://localhost:8080/metrics/flow/messages?expected=300
 
-Output:
+Output
 
 	{
 		rate: "688.3288056391231",
 		expexted: "300.0",
 		status: "ok"
 	}
-	
+
+The used properties can be inspected using the following call
+
+	http://localhost:8080/metrics/properties

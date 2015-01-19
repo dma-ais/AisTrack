@@ -38,6 +38,8 @@ import com.codahale.metrics.json.MetricsModule;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import dk.dma.ais.track.AisTrackConfiguration;
+
 @Singleton
 @Path("/metrics")
 @Produces(MediaType.APPLICATION_JSON)
@@ -48,10 +50,12 @@ public class MetricsResource {
     final ObjectMapper mapper = new ObjectMapper().registerModule(new MetricsModule(TimeUnit.SECONDS, TimeUnit.MILLISECONDS, false,
             MetricFilter.ALL));
     final MetricRegistry metrics;
+    final AisTrackConfiguration cfg;
 
     @Inject
-    public MetricsResource(MetricRegistry metrics) {
+    public MetricsResource(MetricRegistry metrics, AisTrackConfiguration cfg) {
         this.metrics = metrics;
+        this.cfg = cfg;
     }
 
     @GET
@@ -78,6 +82,21 @@ public class MetricsResource {
             return mapper.writeValueAsString(map);
         } catch (JsonProcessingException e) {
             LOG.error("Failed to generate metrics", e);
+            throw new InternalServerErrorException();
+        }
+    }
+    
+    @GET
+    @Path("/properties")
+    public String properties() {
+        HashMap<String, String> map = new HashMap<>();
+        for (String key : cfg.propertyNames()) {
+            map.put(key, cfg.getProperty(key));
+        }
+        try {
+            return mapper.writeValueAsString(map);
+        } catch (JsonProcessingException e) {
+            LOG.error("Failed to generate properties", e);
             throw new InternalServerErrorException();
         }
     }
