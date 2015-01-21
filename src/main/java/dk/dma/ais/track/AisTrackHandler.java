@@ -195,6 +195,11 @@ public class AisTrackHandler implements Consumer<AisPacket> {
     public MaxSpeed getMaxSpeed(int mmsi) {
         return maxSpeedStore.getMaxSpeed(mmsi);
     }
+    
+    public List<MaxSpeed> getMaxSpeedList() {
+        return maxSpeedStore.getMaxSpeedList();
+    }
+
 
     public void stop() {
         if (pastTrackStore != null) {

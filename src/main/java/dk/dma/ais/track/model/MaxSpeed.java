@@ -16,13 +16,15 @@ package dk.dma.ais.track.model;
 
 public class MaxSpeed {
     
+    private int mmsi;
     private double maxSpeed;
     
     public MaxSpeed() {
         
     }
     
-    public MaxSpeed(double maxSpeed) {
+    public MaxSpeed(int mmsi, double maxSpeed) {
+        this.mmsi = mmsi;
         this.maxSpeed = maxSpeed;
     }
     
@@ -32,6 +34,14 @@ public class MaxSpeed {
     
     public void setMaxSpeed(double maxSpeed) {
         this.maxSpeed = maxSpeed;
+    }
+    
+    public int getMmsi() {
+        return mmsi;
+    }
+    
+    public void setMmsi(int mmsi) {
+        this.mmsi = mmsi;
     }
 
 }

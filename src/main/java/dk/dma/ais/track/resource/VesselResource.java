@@ -115,5 +115,13 @@ public class VesselResource {
         }
         return ms;
     }
+    
+    @Timed
+    @GET
+    @Path("/maxspeed")
+    public List<MaxSpeed> maxSpeedList() {
+        return handler.getMaxSpeedList();
+    }
+
 
 }

@@ -17,6 +17,8 @@ package dk.dma.ais.track.store;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -83,6 +85,15 @@ public class MapDbMaxSpeedStore implements MaxSpeedStore {
         };
         expireExecutor.execute(task);
     }
+    
+    @Override
+    public List<MaxSpeed> getMaxSpeedList() {
+        ArrayList<MaxSpeed> list = new ArrayList<>();
+        for (Map.Entry<Integer, MaxSpeedRing> entry : maxSpeedMap.entrySet()) {
+            list.add(new MaxSpeed(entry.getKey(), entry.getValue().getMaxSpeed()));
+        }
+        return list;
+    }
 
     @Override
     public void register(VesselTarget target) {
@@ -101,7 +112,7 @@ public class MapDbMaxSpeedStore implements MaxSpeedStore {
         if (ring == null) {
             return null;
         }
-        return new MaxSpeed(ring.getMaxSpeed());
+        return new MaxSpeed(mmsi, ring.getMaxSpeed());
     }
     
     @Override

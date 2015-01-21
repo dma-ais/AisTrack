@@ -52,9 +52,13 @@ Past track for the given vessel. The following GET arguments can be supplied for
 
 #### Vessel max speed
 
+The maximum speed encountered for the given vessel
+
 	http://locahost:8080/target/vessel/maxspeed/{mmsi}
 	
-The maximum speed encountered for the given vessel.
+A list of all recorded max speeds
+
+	http://locahost:8080/target/vessel/maxspeed
 
 #### Metrics
 

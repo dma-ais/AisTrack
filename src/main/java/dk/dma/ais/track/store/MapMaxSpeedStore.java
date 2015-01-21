@@ -14,6 +14,9 @@
  */
 package dk.dma.ais.track.store;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import dk.dma.ais.track.model.MaxSpeed;
@@ -44,7 +47,16 @@ public class MapMaxSpeedStore implements MaxSpeedStore {
         if (ms == null) {
             return null;
         }
-        return new MaxSpeed(ms);
+        return new MaxSpeed(mmsi, ms);
+    }
+    
+    @Override
+    public List<MaxSpeed> getMaxSpeedList() {
+        ArrayList<MaxSpeed> list = new ArrayList<>();
+        for (Map.Entry<Integer, Double> entry : maxSpeedMap.entrySet()) {
+            list.add(new MaxSpeed(entry.getKey(), entry.getValue()));
+        }
+        return list;
     }
 
     @Override
