@@ -118,6 +118,7 @@ public class AisTrackDaemon extends AbstractDaemon {
                 bind(AisTrackConfiguration.class).toInstance(cfg);
                 bind(MaxSpeedStore.class).to(maxSpeedStoreClazz).in(Singleton.class);
                 bind(MetricRegistry.class).in(Singleton.class);
+                bind(AisStoreClient.class).in(Singleton.class);
             }
         };
         

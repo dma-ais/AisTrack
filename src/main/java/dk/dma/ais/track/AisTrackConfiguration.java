@@ -68,6 +68,17 @@ public interface AisTrackConfiguration extends Accessible {
     @DefaultValue("PT1H")
     @ConverterClass(DurationConverter.class)
     Duration pastTrackTtl();
+    
+    @DefaultValue("P7D")
+    @ConverterClass(DurationConverter.class)
+    Duration defaultLongTrackAge();
+
+    @DefaultValue("https://ais2.e-navigation.net/store/query")
+    String aisStoreBaseUrl();
+    
+    String aisStoreUsername();
+    
+    String aisStorePassword();
 
     // See https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-
     public class DurationConverter implements Converter<Duration> {

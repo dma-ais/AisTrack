@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Timed;
 
+import dk.dma.ais.track.AisStoreClient;
 import dk.dma.ais.track.AisTrackHandler;
 import dk.dma.ais.track.VesselTargetFilter;
 import dk.dma.ais.track.model.MaxSpeed;
@@ -48,10 +49,12 @@ public class VesselResource {
     static final Logger LOG = LoggerFactory.getLogger(VesselResource.class);
 
     final AisTrackHandler handler;
+    final AisStoreClient aisStoreClient;
 
     @Inject
-    public VesselResource(AisTrackHandler handler) {
+    public VesselResource(AisTrackHandler handler, AisStoreClient aisStoreClient) {
         this.handler = handler;
+        this.aisStoreClient = aisStoreClient;
     }
 
     @Timed
@@ -104,6 +107,23 @@ public class VesselResource {
         }
         return track;
     }
+    
+    @Timed
+    @GET
+    @Path("/longtrack/{mmsi}")
+    public List<PastTrackPosition> getLongTrack(@PathParam("mmsi") Integer mmsi, @QueryParam("minDist") Integer minDist,
+            @QueryParam("age") String ageStr) {
+        Duration age = null;
+        if (ageStr != null) {
+            age = Duration.parse(ageStr);
+        }
+        List<PastTrackPosition> track = aisStoreClient.getPastTrack(mmsi, minDist, age);
+        if (track == null) {
+            throw new NotFoundException();
+        }
+        return track;
+    }
+    
 
     @Timed
     @GET

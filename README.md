@@ -49,6 +49,12 @@ Past track for the given vessel. The following GET arguments can be supplied for
   * `minDist` (meters) - Samples the past track. The minimum distance between
 	positions will be `minDist`. This argument can greatly reduce the number of track points for vessels at berth or anchor.
   * `age` - How long back to get past track for (format: https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence)
+  
+#### Vessel track from AisStore
+
+	http://locahost:8080/target/vessel/longtrack/{mmsi}
+	
+Same arguments as below
 
 #### Vessel max speed
 
