@@ -134,9 +134,6 @@ public class AisTrackHandler implements Consumer<AisPacket> {
         if (oldTarget != null && (target.getTargetType() != oldTarget.getTargetType())) {
             // Discard old target
             oldTarget = null;
-            if (pastTrack) {
-                pastTrackStore.remove(target.getMmsi());
-            }
         }
 
         // Register max speed

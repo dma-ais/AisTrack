@@ -101,11 +101,6 @@ public class MapDbPastTrackStore extends AbstractPastTrackStore implements PastT
     }
 
     @Override
-    public void remove(int mmsi) {
-        trackMap.remove(mmsi);
-    }
-
-    @Override
     public void close() {
         LOG.info("Stopping past track store expiry thread");
         expireExecutor.shutdownNow();

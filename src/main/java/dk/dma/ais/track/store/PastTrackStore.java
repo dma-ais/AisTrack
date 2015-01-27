@@ -26,8 +26,6 @@ public interface PastTrackStore {
     
     void add(VesselTarget target);
     
-    void remove(int mmsi);
-    
     void close();
     
     int size();

@@ -78,11 +78,6 @@ public class MapPastTrackStore extends AbstractPastTrackStore implements PastTra
     }
 
     @Override
-    public void remove(int mmsi) {
-        trackMap.remove(mmsi);
-    }
-
-    @Override
     public void close() {
     }
     
