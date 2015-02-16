@@ -18,6 +18,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -55,32 +57,55 @@ public class MapDbPastTrackStore extends AbstractPastTrackStore implements PastT
         LOG.info(trackMap.size() + " tracks loaded");
         final long cleanupInterval = cfg.cleanupInterval().toMillis();
         expireExecutor = Executors.newSingleThreadScheduledExecutor();
-        Runnable task = new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        Thread.sleep(cleanupInterval);
-                    } catch (InterruptedException e) {
-                        return;
-                    }
-                    long removedPoints = 0;
-                    long removedTracks = 0;
-                    for (Map.Entry<Integer, PastTrack> entry : trackMap.entrySet()) {
-                        removedPoints += entry.getValue().trim(pastTrackTtl);
-                        if (entry.getValue().size() == 0) {
-                            trackMap.remove(entry.getKey());
-                            removedTracks++;
-                        }
-                    }
-                    if (removedPoints > 0 || removedTracks > 0) {
-                        LOG.info("Cleaned up past track removed " + removedPoints + " points and " + removedTracks + " tracks");
-                    }
-                    db.getDb().compact();
+        Runnable task = () -> {
+            while (true) {
+                try {
+                    Thread.sleep(cleanupInterval);
+                } catch (InterruptedException e) {
+                    return;
                 }
+                periodicCleanUp();
             }
         };
         expireExecutor.execute(task);
+    }
+
+    /**
+     * Called periodically to remove stale data
+     */
+    private void periodicCleanUp() {
+        try {
+            long t0 = System.currentTimeMillis();
+            long removedPoints = 0;
+            List<Integer> removedTracks = new ArrayList<>();
+            Map<Integer, PastTrack> updatedTracks = new HashMap<>();
+            for (Map.Entry<Integer, PastTrack> entry : trackMap.entrySet()) {
+                PastTrack track = entry.getValue();
+                if (track.needsTrimming(pastTrackTtl)) {
+                    track = new PastTrack(track);
+                    removedPoints += track.trim(pastTrackTtl);
+                    if (track.size() == 0) {
+                        removedTracks.add(entry.getKey());
+                    } else {
+                        updatedTracks.put(entry.getKey(), track);
+                    }
+                }
+            }
+
+            removedTracks.forEach(trackMap::remove);
+            for (Map.Entry<Integer, PastTrack> entry : updatedTracks.entrySet()) {
+                trackMap.put(entry.getKey(), entry.getValue());
+            }
+
+            if (removedPoints > 0 || removedTracks.size() > 0) {
+                LOG.info("Removed " + removedPoints + " past track points and " + removedTracks.size() + " past tracks in " +
+                        (System.currentTimeMillis() - t0) + " ms");
+            }
+            db.getDb().compact();
+
+        } catch (Exception e) {
+            LOG.error("Failed clean-up", e);
+        }
     }
 
     @Override
@@ -93,11 +118,21 @@ public class MapDbPastTrackStore extends AbstractPastTrackStore implements PastT
         if (!target.isValidPos()) {
             return;
         }
-        trackMap.putIfAbsent(target.getMmsi(), new PastTrack());
+
         PastTrack track = trackMap.get(target.getMmsi());
+        if (track != null) {
+            // NB: Never modify a track that has been added to MspDB:
+            // See: http://www.mapdb.org/doc/caches.html
+            track = new PastTrack(track);
+        } else {
+            track = new PastTrack();
+        }
+
         track.add(new PastTrackPosition(target.getLat(), target.getLon(), target.getCog(), target.getSog(), target
                 .getLastPosReport().getTime()));
         track.trim(pastTrackTtl);
+
+        trackMap.put(target.getMmsi(), track);
     }
 
     @Override

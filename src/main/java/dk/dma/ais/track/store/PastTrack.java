@@ -14,13 +14,13 @@
  */
 package dk.dma.ais.track.store;
 
+import dk.dma.ais.track.model.PastTrackPosition;
+import dk.dma.enav.model.geometry.Position;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
-
-import dk.dma.ais.track.model.PastTrackPosition;
-import dk.dma.enav.model.geometry.Position;
 
 public class PastTrack implements Serializable {
 
@@ -28,12 +28,37 @@ public class PastTrack implements Serializable {
 
     private TreeSet<PastTrackPosition> track = new TreeSet<>();
 
+    /**
+     * Constructor
+     */
+    public PastTrack() {
+    }
+
+    /**
+     * Clone constructor
+     * @param pastTrack the past track to clone
+     */
+    public PastTrack(PastTrack pastTrack) {
+        // TODO: Figure out if we need to deep clone the individual tracks
+        track.addAll(pastTrack.track);
+    }
+
     public synchronized void add(PastTrackPosition pos) {
         track.add(pos);
     }
 
     public synchronized List<PastTrackPosition> asList() {
-        return new ArrayList<PastTrackPosition>(track);
+        return new ArrayList<>(track);
+    }
+
+    public synchronized boolean needsTrimming(long ttl) {
+        long maxAge = System.currentTimeMillis() - ttl;
+        for (PastTrackPosition pos : track) {
+            if (pos.getTime() < maxAge) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public synchronized int trim(long ttl) {

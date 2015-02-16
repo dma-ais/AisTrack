@@ -42,8 +42,12 @@ public abstract class AbstractPastTrackStore implements PastTrackStore {
         if (track == null) {
             return null;
         }
+
+        // NB: Do NOT trim. MapDB require immutable entities.
+        // Leave the trimming to periodic job + when tracks are updated (and cloned)
+        // Commented out: track.trim(pastTrackTtl);
+
         long ageTtl = age != null ? age.toMillis() : Long.MAX_VALUE;
-        track.trim(pastTrackTtl);
         return PastTrack.downSample(track.asList(), minDist, ageTtl);
     }
 

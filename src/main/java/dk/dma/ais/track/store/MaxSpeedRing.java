@@ -25,6 +25,10 @@ public class MaxSpeedRing implements Serializable {
     private final ArrayList<Float> ring;
     private long lastUpdate;
 
+    /**
+     * Constructor
+     * @param size the size of the ring
+     */
     public MaxSpeedRing(int size) {
         ring = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
@@ -32,17 +36,27 @@ public class MaxSpeedRing implements Serializable {
         }
     }
 
+    /**
+     * Clone constructor
+     * @param maxSpeedRing the ring to clone
+     */
+    public MaxSpeedRing(MaxSpeedRing maxSpeedRing) {
+        ring = new ArrayList<>(maxSpeedRing.ring);
+        lastUpdate = maxSpeedRing.lastUpdate;
+    }
+
     public synchronized void register(float speed) {
         register(LocalDate.now(), speed);
     }
 
     public synchronized void register(LocalDate now, float speed) {
+        expire(now);
+
         lastUpdate = System.currentTimeMillis();
         int nowDay = (int) (now.toEpochDay() % size());                
         if (ring.get(nowDay) < speed) {
             ring.set(nowDay, speed);
         }
-        expire(now);
     }
     
     public synchronized void expire() {
@@ -56,7 +70,13 @@ public class MaxSpeedRing implements Serializable {
             ring.set(tomDay, 0f);
         }        
     }
-    
+
+    public boolean shouldExpire(LocalDate now) {
+        LocalDate old = now.minusDays(size() - 1);
+        int tomDay = (int) (old.toEpochDay() % size());
+        return ring.get(tomDay) != 0;
+    }
+
     public synchronized float getMaxSpeed() {
         float maxSpeed = 0f;
         for (Float speed : ring) {

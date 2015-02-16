@@ -51,6 +51,7 @@ public class AisTrackHandler implements Consumer<AisPacket> {
     private final boolean pastTrack;
     private final boolean registerMaxSpeed;
     private final Meter messages;
+    private boolean stopped;
 
     @Inject
     public AisTrackHandler(TargetStore<VesselTarget> vesselStore, PastTrackStore pastTrackStore, MaxSpeedStore maxSpeedStore,
@@ -137,16 +138,16 @@ public class AisTrackHandler implements Consumer<AisPacket> {
         }
 
         // Register max speed
-        if (registerMaxSpeed) {
+        if (registerMaxSpeed && !stopped) {
             maxSpeedStore.register(target);
         }
 
         // Save past track position
-        if (pastTrack) {
+        if (pastTrack && !stopped) {
             pastTrackStore.add(target);
         }
 
-        if (!oldMessage) {
+        if (!oldMessage && !stopped) {
             // Merge and save
             if (oldTarget != null) {
                 target = oldTarget.merge(target);
@@ -199,6 +200,8 @@ public class AisTrackHandler implements Consumer<AisPacket> {
 
 
     public void stop() {
+        stopped = true;
+
         if (pastTrackStore != null) {
             pastTrackStore.close();
         }

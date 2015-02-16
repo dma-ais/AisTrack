@@ -39,12 +39,13 @@ public class MapDbTargetStore<T extends Target> implements TargetStore<T> {
     private final Map<Integer, T> map;
     private final MapDb<Integer, T> db;
     private final ScheduledExecutorService expireExecutor;
+    private final long expiryTime;
 
     @Inject
     public MapDbTargetStore(AisTrackConfiguration cfg) throws IOException {
         LOG.info("Loading target database using backup dir: " + cfg.backup());
         Files.createDirectories(Paths.get(cfg.backup()));
-        final long expiryTime = cfg.targetExpire().toMillis();
+        expiryTime = cfg.targetExpire().toMillis();
         final long cleanupInterval = cfg.cleanupInterval().toMillis();
         db = MapDb.create(cfg.backup(), "targetdb");
         if (db == null) {
@@ -53,33 +54,41 @@ public class MapDbTargetStore<T extends Target> implements TargetStore<T> {
         map = db.getMap();
         LOG.info(map.size() + " targets loaded");
         expireExecutor = Executors.newSingleThreadScheduledExecutor();
-        Runnable task = new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        Thread.sleep(cleanupInterval);
-                    } catch (InterruptedException e) {
-                        return;
-                    }
-                    long now = System.currentTimeMillis();
-                    long removed = 0;
-                    for (T target : map.values()) {
-                        Date lastReport = target.getLastReport();
-                        long age = now - lastReport.getTime();
-                        if (age > expiryTime) {
-                            map.remove(target.getMmsi());
-                            removed++;
-                        }
-                    }
-                    if (removed > 0) {
-                        LOG.info("Cleaned up targets removed " + removed);
-                    }
-                    db.getDb().compact();
+        Runnable task = () -> {
+            while (true) {
+                try {
+                    Thread.sleep(cleanupInterval);
+                } catch (InterruptedException e) {
+                    return;
                 }
+                periodicCleanUp();
             }
         };
         expireExecutor.execute(task);
+    }
+
+    /**
+     * Called periodically to remove stale data
+     */
+    private void periodicCleanUp() {
+        try {
+            long now = System.currentTimeMillis();
+            long removed = 0;
+            for (T target : map.values()) {
+                Date lastReport = target.getLastReport();
+                long age = now - lastReport.getTime();
+                if (age > expiryTime) {
+                    map.remove(target.getMmsi());
+                    removed++;
+                }
+            }
+            if (removed > 0) {
+                LOG.info("Cleaned up " + removed + " targets in " + (System.currentTimeMillis() - now) + " ms");
+            }
+            db.getDb().compact();
+        } catch (Exception e) {
+            LOG.error("Failed clean-up", e);
+        }
     }
 
     @Override
