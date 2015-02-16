@@ -64,6 +64,7 @@ public class MapDbPastTrackStore extends AbstractPastTrackStore implements PastT
                     } catch (InterruptedException e) {
                         return;
                     }
+                    long now = System.currentTimeMillis();
                     long removedPoints = 0;
                     long removedTracks = 0;
                     for (Map.Entry<Integer, PastTrack> entry : trackMap.entrySet()) {
@@ -74,7 +75,8 @@ public class MapDbPastTrackStore extends AbstractPastTrackStore implements PastT
                         }
                     }
                     if (removedPoints > 0 || removedTracks > 0) {
-                        LOG.info("Cleaned up past track removed " + removedPoints + " points and " + removedTracks + " tracks");
+                        LOG.info("Cleaned up past track removed " + removedPoints + " points and " + removedTracks + " tracks " +
+                            " in " + (System.currentTimeMillis() - now) + " ms");
                     }
                     db.getDb().compact();
                 }

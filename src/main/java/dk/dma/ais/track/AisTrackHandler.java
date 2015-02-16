@@ -14,22 +14,9 @@
  */
 package dk.dma.ais.track;
 
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.function.Consumer;
-
-import javax.inject.Inject;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-
 import dk.dma.ais.message.AisMessage;
 import dk.dma.ais.message.AisTargetType;
 import dk.dma.ais.message.IVesselPositionMessage;
@@ -40,6 +27,16 @@ import dk.dma.ais.track.model.VesselTarget;
 import dk.dma.ais.track.store.MaxSpeedStore;
 import dk.dma.ais.track.store.PastTrackStore;
 import dk.dma.ais.track.store.TargetStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.function.Consumer;
 
 public class AisTrackHandler implements Consumer<AisPacket> {
 
@@ -51,6 +48,7 @@ public class AisTrackHandler implements Consumer<AisPacket> {
     private final boolean pastTrack;
     private final boolean registerMaxSpeed;
     private final Meter messages;
+    private boolean stopped;
 
     @Inject
     public AisTrackHandler(TargetStore<VesselTarget> vesselStore, PastTrackStore pastTrackStore, MaxSpeedStore maxSpeedStore,
@@ -137,16 +135,16 @@ public class AisTrackHandler implements Consumer<AisPacket> {
         }
 
         // Register max speed
-        if (registerMaxSpeed) {
+        if (registerMaxSpeed && !stopped) {
             maxSpeedStore.register(target);
         }
 
         // Save past track position
-        if (pastTrack) {
+        if (pastTrack && !stopped) {
             pastTrackStore.add(target);
         }
 
-        if (!oldMessage) {
+        if (!oldMessage && !stopped) {
             // Merge and save
             if (oldTarget != null) {
                 target = oldTarget.merge(target);
@@ -199,6 +197,8 @@ public class AisTrackHandler implements Consumer<AisPacket> {
 
 
     public void stop() {
+        stopped = true;
+
         if (pastTrackStore != null) {
             pastTrackStore.close();
         }

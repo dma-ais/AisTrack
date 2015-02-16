@@ -55,7 +55,7 @@ public class MapDbMaxSpeedStore implements MaxSpeedStore {
         LOG.info(maxSpeedMap.size() + " max speeds loaded");
         ringSize = cfg.maxSpeedRingSize();
         final long cleanupInterval = cfg.cleanupInterval().toMillis();
-        final long expiryTime = (ringSize + 2) * 24 * 60 * 60 * 1000;
+        final long expiryTime = (ringSize + 2) * 24 * 60 * 60 * 1000L;
         expireExecutor = Executors.newSingleThreadScheduledExecutor();
         Runnable task = new Runnable() {
             @Override
@@ -77,7 +77,8 @@ public class MapDbMaxSpeedStore implements MaxSpeedStore {
                         }
                     }
                     if (removed > 0) {
-                        LOG.info("Max speed targets removed " + removed);
+                        LOG.info("Max speed targets removed " + removed +
+                            " in " + (System.currentTimeMillis() - now) + " ms");
                     }                    
                     db.getDb().compact();
                 }

@@ -73,7 +73,8 @@ public class MapDbTargetStore<T extends Target> implements TargetStore<T> {
                         }
                     }
                     if (removed > 0) {
-                        LOG.info("Cleaned up targets removed " + removed);
+                        LOG.info("Cleaned up targets removed " + removed +
+                            " in " + (System.currentTimeMillis() - now) + " ms");
                     }
                     db.getDb().compact();
                 }
