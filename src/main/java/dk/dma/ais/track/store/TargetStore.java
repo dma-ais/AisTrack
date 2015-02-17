@@ -30,7 +30,9 @@ public interface TargetStore<T extends Target> {
     int size();
     
     Collection<T> list();
-    
+
+    default void prepareStop() {};
+
     void close();
     
 }

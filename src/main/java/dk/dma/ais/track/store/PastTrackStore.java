@@ -25,7 +25,9 @@ public interface PastTrackStore {
     List<PastTrackPosition> get(int mmsi, Integer minDist, Duration age);
     
     void add(VesselTarget target);
-    
+
+    default void prepareStop() {};
+
     void close();
     
     int size();

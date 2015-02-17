@@ -34,10 +34,11 @@ import dk.dma.ais.track.AisTrackConfiguration;
 import dk.dma.ais.track.model.PastTrackPosition;
 import dk.dma.ais.track.model.VesselTarget;
 
-public class MapDbPastTrackStore extends AbstractPastTrackStore implements PastTrackStore {
+public class MapDbPastTrackStore extends AbstractPastTrackStore implements PastTrackStore, Runnable {
 
     static final Logger LOG = LoggerFactory.getLogger(MapDbPastTrackStore.class);
 
+    private boolean stopped;
     private final MapDb<Integer, PastTrack> db;
     private final BTreeMap<Integer, PastTrack> trackMap;
     private final ScheduledExecutorService expireExecutor;
@@ -55,34 +56,35 @@ public class MapDbPastTrackStore extends AbstractPastTrackStore implements PastT
         LOG.info(trackMap.size() + " tracks loaded");
         final long cleanupInterval = cfg.cleanupInterval().toMillis();
         expireExecutor = Executors.newSingleThreadScheduledExecutor();
-        Runnable task = new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        Thread.sleep(cleanupInterval);
-                    } catch (InterruptedException e) {
-                        return;
-                    }
-                    long now = System.currentTimeMillis();
-                    long removedPoints = 0;
-                    long removedTracks = 0;
-                    for (Map.Entry<Integer, PastTrack> entry : trackMap.entrySet()) {
-                        removedPoints += entry.getValue().trim(pastTrackTtl);
-                        if (entry.getValue().size() == 0) {
-                            trackMap.remove(entry.getKey());
-                            removedTracks++;
-                        }
-                    }
-                    if (removedPoints > 0 || removedTracks > 0) {
-                        LOG.info("Cleaned up past track removed " + removedPoints + " points and " + removedTracks + " tracks " +
-                            " in " + (System.currentTimeMillis() - now) + " ms");
-                    }
-                    db.getDb().compact();
-                }
+        expireExecutor.scheduleWithFixedDelay(this, cleanupInterval, cleanupInterval, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Expires stale data
+     */
+    @Override
+    public void run() {
+        long now = System.currentTimeMillis();
+        long removedPoints = 0;
+        long removedTracks = 0;
+        for (Map.Entry<Integer, PastTrack> entry : trackMap.entrySet()) {
+            if (stopped) {
+                return;
             }
-        };
-        expireExecutor.execute(task);
+
+            removedPoints += entry.getValue().trim(pastTrackTtl);
+            if (entry.getValue().size() == 0) {
+                trackMap.remove(entry.getKey());
+                removedTracks++;
+            }
+        }
+        if (removedPoints > 0 || removedTracks > 0) {
+            LOG.info("Cleaned up past track removed " + removedPoints + " points and " + removedTracks + " tracks " +
+                    " in " + (System.currentTimeMillis() - now) + " ms");
+        }
+        if (!stopped) {
+            db.getDb().compact();
+        }
     }
 
     @Override
@@ -92,7 +94,7 @@ public class MapDbPastTrackStore extends AbstractPastTrackStore implements PastT
 
     @Override
     public void add(VesselTarget target) {
-        if (!target.isValidPos()) {
+        if (!target.isValidPos() || stopped) {
             return;
         }
         trackMap.putIfAbsent(target.getMmsi(), new PastTrack());
@@ -100,6 +102,14 @@ public class MapDbPastTrackStore extends AbstractPastTrackStore implements PastT
         track.add(new PastTrackPosition(target.getLat(), target.getLon(), target.getCog(), target.getSog(), target
                 .getLastPosReport().getTime()));
         track.trim(pastTrackTtl);
+    }
+
+    /**
+     * Start the process of closing this service
+     */
+    @Override
+    public void prepareStop() {
+        stopped = true;
     }
 
     @Override

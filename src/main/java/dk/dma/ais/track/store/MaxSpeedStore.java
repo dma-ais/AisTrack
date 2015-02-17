@@ -26,7 +26,9 @@ public interface MaxSpeedStore {
     MaxSpeed getMaxSpeed(int mmsi);
     
     List<MaxSpeed> getMaxSpeedList();
-    
+
+    default void prepareStop() {};
+
     void close();
     
     int size();

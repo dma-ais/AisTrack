@@ -145,6 +145,10 @@ public class AisTrackDaemon extends AbstractDaemon {
     @Override
     public void shutdown() {
         LOG.info("Shutting down");
+        if (handler != null) {
+            handler.prepareStop();
+        }
+        sleep(2000);
         if (webServer != null) {
             try {
                 webServer.stop();
@@ -155,15 +159,19 @@ public class AisTrackDaemon extends AbstractDaemon {
         if (aisBus != null) {
             aisBus.cancel();
         }
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        sleep(2000);
         if (handler != null) {
             handler.stop();
         }
         super.shutdown();
+    }
+
+    public static void sleep(int ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) throws Exception {

@@ -32,19 +32,21 @@ import org.slf4j.LoggerFactory;
 import dk.dma.ais.track.AisTrackConfiguration;
 import dk.dma.ais.track.model.Target;
 
-public class MapDbTargetStore<T extends Target> implements TargetStore<T> {
+public class MapDbTargetStore<T extends Target> implements TargetStore<T>, Runnable {
 
     static final Logger LOG = LoggerFactory.getLogger(MapDbTargetStore.class);
 
+    private boolean stopped;
     private final Map<Integer, T> map;
     private final MapDb<Integer, T> db;
     private final ScheduledExecutorService expireExecutor;
+    private final long expiryTime;
 
     @Inject
     public MapDbTargetStore(AisTrackConfiguration cfg) throws IOException {
         LOG.info("Loading target database using backup dir: " + cfg.backup());
         Files.createDirectories(Paths.get(cfg.backup()));
-        final long expiryTime = cfg.targetExpire().toMillis();
+        expiryTime = cfg.targetExpire().toMillis();
         final long cleanupInterval = cfg.cleanupInterval().toMillis();
         db = MapDb.create(cfg.backup(), "targetdb");
         if (db == null) {
@@ -53,34 +55,35 @@ public class MapDbTargetStore<T extends Target> implements TargetStore<T> {
         map = db.getMap();
         LOG.info(map.size() + " targets loaded");
         expireExecutor = Executors.newSingleThreadScheduledExecutor();
-        Runnable task = new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        Thread.sleep(cleanupInterval);
-                    } catch (InterruptedException e) {
-                        return;
-                    }
-                    long now = System.currentTimeMillis();
-                    long removed = 0;
-                    for (T target : map.values()) {
-                        Date lastReport = target.getLastReport();
-                        long age = now - lastReport.getTime();
-                        if (age > expiryTime) {
-                            map.remove(target.getMmsi());
-                            removed++;
-                        }
-                    }
-                    if (removed > 0) {
-                        LOG.info("Cleaned up targets removed " + removed +
-                            " in " + (System.currentTimeMillis() - now) + " ms");
-                    }
-                    db.getDb().compact();
-                }
+        expireExecutor.scheduleWithFixedDelay(this, cleanupInterval, cleanupInterval, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Expires stale data
+     */
+    @Override
+    public void run() {
+        long now = System.currentTimeMillis();
+        long removed = 0;
+        for (T target : map.values()) {
+            if (stopped) {
+                return;
             }
-        };
-        expireExecutor.execute(task);
+
+            Date lastReport = target.getLastReport();
+            long age = now - lastReport.getTime();
+            if (age > expiryTime) {
+                map.remove(target.getMmsi());
+                removed++;
+            }
+        }
+        if (removed > 0) {
+            LOG.info("Cleaned up targets removed " + removed +
+                    " in " + (System.currentTimeMillis() - now) + " ms");
+        }
+        if (!stopped) {
+            db.getDb().compact();
+        }
     }
 
     @Override
@@ -90,7 +93,9 @@ public class MapDbTargetStore<T extends Target> implements TargetStore<T> {
 
     @Override
     public void put(T target) {
-        map.put(target.getMmsi(), target);
+        if (!stopped) {
+            map.put(target.getMmsi(), target);
+        }
     }
 
     @Override
@@ -102,7 +107,15 @@ public class MapDbTargetStore<T extends Target> implements TargetStore<T> {
     public Collection<T> list() {
         return map.values();
     }
-    
+
+    /**
+     * Start the process of closing this service
+     */
+    @Override
+    public void prepareStop() {
+        stopped = true;
+    }
+
     @Override
     public void close() {
         LOG.info("Stopping target store expiry thread");

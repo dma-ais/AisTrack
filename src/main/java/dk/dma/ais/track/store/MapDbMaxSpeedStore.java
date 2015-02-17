@@ -34,14 +34,16 @@ import dk.dma.ais.track.AisTrackConfiguration;
 import dk.dma.ais.track.model.MaxSpeed;
 import dk.dma.ais.track.model.VesselTarget;
 
-public class MapDbMaxSpeedStore implements MaxSpeedStore {
+public class MapDbMaxSpeedStore implements MaxSpeedStore, Runnable {
 
     static final Logger LOG = LoggerFactory.getLogger(MapDbMaxSpeedStore.class);
 
+    private boolean stopped;
     private final MapDb<Integer, MaxSpeedRing> db;
     private final BTreeMap<Integer, MaxSpeedRing> maxSpeedMap;
     private final ScheduledExecutorService expireExecutor;
     private final int ringSize;
+    private final long expiryTime;
 
     @Inject
     public MapDbMaxSpeedStore(AisTrackConfiguration cfg) throws IOException {
@@ -55,38 +57,39 @@ public class MapDbMaxSpeedStore implements MaxSpeedStore {
         LOG.info(maxSpeedMap.size() + " max speeds loaded");
         ringSize = cfg.maxSpeedRingSize();
         final long cleanupInterval = cfg.cleanupInterval().toMillis();
-        final long expiryTime = (ringSize + 2) * 24 * 60 * 60 * 1000L;
+        expiryTime = (ringSize + 2) * 24 * 60 * 60 * 1000L;
         expireExecutor = Executors.newSingleThreadScheduledExecutor();
-        Runnable task = new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        Thread.sleep(cleanupInterval);
-                    } catch (InterruptedException e) {
-                        return;
-                    }
-                    long now = System.currentTimeMillis();
-                    long removed = 0;
-                    for (Map.Entry<Integer, MaxSpeedRing> entry : maxSpeedMap.entrySet()) {
-                        entry.getValue().expire();
-                        long age = now - entry.getValue().getLastUpdate();
-                        if (age > expiryTime) {
-                            maxSpeedMap.remove(entry.getKey());
-                            removed++;
-                        }
-                    }
-                    if (removed > 0) {
-                        LOG.info("Max speed targets removed " + removed +
-                            " in " + (System.currentTimeMillis() - now) + " ms");
-                    }                    
-                    db.getDb().compact();
-                }
-            }
-        };
-        expireExecutor.execute(task);
+        expireExecutor.scheduleWithFixedDelay(this, cleanupInterval, cleanupInterval, TimeUnit.MILLISECONDS);
     }
-    
+
+    /**
+     * Expires stale data
+     */
+    @Override
+    public void run() {
+        long now = System.currentTimeMillis();
+        long removed = 0;
+        for (Map.Entry<Integer, MaxSpeedRing> entry : maxSpeedMap.entrySet()) {
+            if (stopped) {
+                return;
+            }
+
+            entry.getValue().expire();
+            long age = now - entry.getValue().getLastUpdate();
+            if (age > expiryTime) {
+                maxSpeedMap.remove(entry.getKey());
+                removed++;
+            }
+        }
+        if (removed > 0) {
+            LOG.info("Max speed targets removed " + removed +
+                    " in " + (System.currentTimeMillis() - now) + " ms");
+        }
+        if (!stopped) {
+            db.getDb().compact();
+        }
+    }
+
     @Override
     public List<MaxSpeed> getMaxSpeedList() {
         ArrayList<MaxSpeed> list = new ArrayList<>();
@@ -99,7 +102,7 @@ public class MapDbMaxSpeedStore implements MaxSpeedStore {
     @Override
     public void register(VesselTarget target) {
         Double sog = target.getSog();
-        if (!target.isValidPos() || sog == null) {
+        if (!target.isValidPos() || sog == null || stopped) {
             return;
         }
         maxSpeedMap.putIfAbsent(target.getMmsi(), new MaxSpeedRing(ringSize));
@@ -115,7 +118,15 @@ public class MapDbMaxSpeedStore implements MaxSpeedStore {
         }
         return new MaxSpeed(mmsi, ring.getMaxSpeed());
     }
-    
+
+    /**
+     * Start the process of closing this service
+     */
+    @Override
+    public void prepareStop() {
+        stopped = true;
+    }
+
     @Override
     public void close() {
         LOG.info("Stopping max speed store expiry thread");
