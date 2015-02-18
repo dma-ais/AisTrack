@@ -67,26 +67,30 @@ public class MapDbMaxSpeedStore implements MaxSpeedStore, Runnable {
      */
     @Override
     public void run() {
-        long now = System.currentTimeMillis();
-        long removed = 0;
-        for (Map.Entry<Integer, MaxSpeedRing> entry : maxSpeedMap.entrySet()) {
-            if (stopped) {
-                return;
-            }
+        try {
+            long now = System.currentTimeMillis();
+            long removed = 0;
+            for (Map.Entry<Integer, MaxSpeedRing> entry : maxSpeedMap.entrySet()) {
+                if (stopped) {
+                    return;
+                }
 
-            entry.getValue().expire();
-            long age = now - entry.getValue().getLastUpdate();
-            if (age > expiryTime) {
-                maxSpeedMap.remove(entry.getKey());
-                removed++;
+                entry.getValue().expire();
+                long age = now - entry.getValue().getLastUpdate();
+                if (age > expiryTime) {
+                    maxSpeedMap.remove(entry.getKey());
+                    removed++;
+                }
             }
-        }
-        if (removed > 0) {
-            LOG.info("Max speed targets removed " + removed +
-                    " in " + (System.currentTimeMillis() - now) + " ms");
-        }
-        if (!stopped) {
-            db.getDb().compact();
+            if (removed > 0) {
+                LOG.info("Max speed targets removed: " + removed);
+            }
+            if (!stopped) {
+                db.getDb().compact();
+            }
+            LOG.info("Stale data cleaned up in " + (System.currentTimeMillis() - now) + " ms");
+        } catch (Exception e) {
+            LOG.error("Error cleaning up stale data", e);
         }
     }
 

@@ -64,26 +64,30 @@ public class MapDbPastTrackStore extends AbstractPastTrackStore implements PastT
      */
     @Override
     public void run() {
-        long now = System.currentTimeMillis();
-        long removedPoints = 0;
-        long removedTracks = 0;
-        for (Map.Entry<Integer, PastTrack> entry : trackMap.entrySet()) {
-            if (stopped) {
-                return;
-            }
+        try {
+            long now = System.currentTimeMillis();
+            long removedPoints = 0;
+            long removedTracks = 0;
+            for (Map.Entry<Integer, PastTrack> entry : trackMap.entrySet()) {
+                if (stopped) {
+                    return;
+                }
 
-            removedPoints += entry.getValue().trim(pastTrackTtl);
-            if (entry.getValue().size() == 0) {
-                trackMap.remove(entry.getKey());
-                removedTracks++;
+                removedPoints += entry.getValue().trim(pastTrackTtl);
+                if (entry.getValue().size() == 0) {
+                    trackMap.remove(entry.getKey());
+                    removedTracks++;
+                }
             }
-        }
-        if (removedPoints > 0 || removedTracks > 0) {
-            LOG.info("Cleaned up past track removed " + removedPoints + " points and " + removedTracks + " tracks " +
-                    " in " + (System.currentTimeMillis() - now) + " ms");
-        }
-        if (!stopped) {
-            db.getDb().compact();
+            if (removedPoints > 0 || removedTracks > 0) {
+                LOG.info("Past tracks removed: " + removedPoints + " points + " + removedTracks + " tracks");
+            }
+            if (!stopped) {
+                db.getDb().compact();
+            }
+            LOG.info("Stale data cleaned up in " + (System.currentTimeMillis() - now) + " ms");
+        } catch (Exception e) {
+            LOG.error("Error cleaning up stale data", e);
         }
     }
 

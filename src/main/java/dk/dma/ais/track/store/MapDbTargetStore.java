@@ -63,26 +63,30 @@ public class MapDbTargetStore<T extends Target> implements TargetStore<T>, Runna
      */
     @Override
     public void run() {
-        long now = System.currentTimeMillis();
-        long removed = 0;
-        for (T target : map.values()) {
-            if (stopped) {
-                return;
-            }
+        try {
+            long now = System.currentTimeMillis();
+            long removed = 0;
+            for (T target : map.values()) {
+                if (stopped) {
+                    return;
+                }
 
-            Date lastReport = target.getLastReport();
-            long age = now - lastReport.getTime();
-            if (age > expiryTime) {
-                map.remove(target.getMmsi());
-                removed++;
+                Date lastReport = target.getLastReport();
+                long age = now - lastReport.getTime();
+                if (age > expiryTime) {
+                    map.remove(target.getMmsi());
+                    removed++;
+                }
             }
-        }
-        if (removed > 0) {
-            LOG.info("Cleaned up targets removed " + removed +
-                    " in " + (System.currentTimeMillis() - now) + " ms");
-        }
-        if (!stopped) {
-            db.getDb().compact();
+            if (removed > 0) {
+                LOG.info("Targets removed: " + removed);
+            }
+            if (!stopped) {
+                db.getDb().compact();
+            }
+            LOG.info("Stale data cleaned up in " + (System.currentTimeMillis() - now) + " ms");
+        } catch (Exception e) {
+            LOG.error("Error cleaning up stale data", e);
         }
     }
 
