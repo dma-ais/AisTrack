@@ -52,7 +52,7 @@ public class Target implements Serializable {
         if (c != null) {
             this.country = c.getTwoLetter();
         }
-        this.lastReport = (packet.getTimestamp() == null) ? new Date() : packet.getTimestamp();
+        this.lastReport = packet.getTimestamp();
         AisPacketTags tags = packet.getTags();
         this.sourceType = (tags.getSourceType() == null) ? "LIVE" : tags.getSourceType().encode();
         Country sc = tags.getSourceCountry();

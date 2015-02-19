@@ -82,6 +82,12 @@ public class AisTrackHandler implements Consumer<AisPacket> {
     @Override
     public void accept(AisPacket packet) {
         messages.mark();
+
+        // Must have a valid timestamp
+        if (packet.getTimestamp() == null) {
+            return;
+        }
+
         // Must have valid AIS message
         AisMessage message = packet.tryGetAisMessage();
         if (message == null) {
