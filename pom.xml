@@ -2,6 +2,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+	<modules>
+		<module>ais-track-common</module>
+		<module>ais-track-rest</module>
+	</modules>
 	<parent>
 		<groupId>dk.dma</groupId>
 		<artifactId>dma-root-pom</artifactId>
@@ -11,9 +15,9 @@
 	<groupId>dk.dma.ais.track</groupId>
 	<artifactId>ais-track</artifactId>
 	<version>0.1-SNAPSHOT</version>
-	<packaging>jar</packaging>
+	<packaging>pom</packaging>
 	<name>AisTrack</name>
-	<description>AIS vessel target tracker</description>
+	<description>AIS vessel tracker</description>
 
 	<scm>
 		<connection>scm:git:git@github.com:dma-ais/AisTrack.git</connection>
@@ -22,156 +26,58 @@
 	</scm>
 
 	<properties>
-		<dependencies.jersey.version>2.13</dependencies.jersey.version>
-		<dependencies.servlet.version>3.1.0</dependencies.servlet.version>
-		<dependencies.jetty.version>9.2.5.v20141112</dependencies.jetty.version>
 		<dependencies.aislib.version>2.2-SNAPSHOT</dependencies.aislib.version>
 		<dependencies.dma-commons.version>0.3-SNAPSHOT</dependencies.dma-commons.version>
-		<dependencies.guice-bridge.version>2.3.0</dependencies.guice-bridge.version>
-		<dependencies.owner.version>1.0.6</dependencies.owner.version>
+		<dependencies.spring-boot.version>1.2.3.RELEASE</dependencies.spring-boot.version>
+		<java.version>1.8</java.version>
 	</properties>
+
+	<developers>
+		<developer>
+			<id>tbsalling</id>
+			<name>Thomas Borg Salling</name>
+			<email>tbsalling@tbsalling.dk</email>
+			<url>http://tbsalling.dk</url>
+			<organization>Danish Maritime Authority</organization>
+			<organizationUrl>http://www.dma.dk</organizationUrl>
+			<timezone>+1</timezone>
+			<roles>
+				<role>architect</role>
+				<role>developer</role>
+			</roles>
+		</developer>
+	</developers>
 
 	<dependencies>
 		<dependency>
-			<groupId>org.mapdb</groupId>
-			<artifactId>mapdb</artifactId>
-			<version>1.0.6</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>dk.dma.ais.lib</groupId>
-			<artifactId>ais-lib-communication</artifactId>
-			<version>${dependencies.aislib.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>dk.dma.commons</groupId>
-			<artifactId>dma-commons-app</artifactId>
-			<version>${dependencies.dma-commons.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>${dependencies.slf4j.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>javax.servlet-api</artifactId>
-			<version>${dependencies.servlet.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.containers</groupId>
-			<artifactId>jersey-container-servlet</artifactId>
-			<version>${dependencies.jersey.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.glassfish.hk2.external</groupId>
-					<artifactId>javax.inject</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.glassfish.hk2.external</groupId>
-					<artifactId>aopalliance-repackaged</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.media</groupId>
-			<artifactId>jersey-media-multipart</artifactId>
-			<version>${dependencies.jersey.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.media</groupId>
-			<artifactId>jersey-media-moxy</artifactId>
-			<version>${dependencies.jersey.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.core</groupId>
-			<artifactId>jersey-client</artifactId>
-			<version>${dependencies.jersey.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.glassfish.hk2.external</groupId>
-					<artifactId>javax.inject</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.glassfish.hk2.external</groupId>
-					<artifactId>aopalliance-repackaged</artifactId>
-				</exclusion>
-			</exclusions>			
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.jetty</groupId>
-			<artifactId>jetty-server</artifactId>
-			<version>${dependencies.jetty.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.jetty</groupId>
-			<artifactId>jetty-webapp</artifactId>
-			<version>${dependencies.jetty.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.jetty</groupId>
-			<artifactId>jetty-plus</artifactId>
-			<version>${dependencies.jetty.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.jetty</groupId>
-			<artifactId>jetty-annotations</artifactId>
-			<version>${dependencies.jetty.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.aeonbits.owner</groupId>
-			<artifactId>owner</artifactId>
-			<version>${dependencies.owner.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.dropwizard.metrics</groupId>
-			<artifactId>metrics-core</artifactId>
-			<version>${dependencies.metrics.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.dropwizard.metrics</groupId>
-			<artifactId>metrics-json</artifactId>
-			<version>${dependencies.metrics.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.dropwizard.metrics</groupId>
-			<artifactId>metrics-jersey2</artifactId>
-			<version>${dependencies.metrics.version}</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<version>${dependencies.spring-boot.version}</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>${dependencies.spring-boot.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
-				<version>2.3</version>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>shade</goal>
-						</goals>
-						<configuration>
-							<transformers>
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>dk.dma.ais.track.AisTrackDaemon</mainClass>
-								</transformer>
-							</transformers>
-							<filters>
-								<filter>
-									<artifact>*:*</artifact>
-									<excludes>
-										<exclude>META-INF/*.SF</exclude>
-										<exclude>META-INF/*.DSA</exclude>
-										<exclude>META-INF/*.RSA</exclude>
-									</excludes>
-								</filter>
-							</filters>
-						</configuration>
-					</execution>
-				</executions>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
 	</build>
@@ -182,6 +88,16 @@
 			<name>Dma Release Repository</name>
 			<url>http://repository-dma.forge.cloudbees.com/release/</url>
 		</repository>
+		<repository>
+			<id>spring-releases</id>
+			<url>https://repo.spring.io/libs-release</url>
+		</repository>
 	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>spring-releases</id>
+			<url>https://repo.spring.io/libs-release</url>
+		</pluginRepository>
+	</pluginRepositories>
 
 </project>
