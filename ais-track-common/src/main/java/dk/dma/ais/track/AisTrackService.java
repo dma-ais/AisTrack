@@ -40,7 +40,7 @@ import static java.lang.System.exit;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
- *  AisTrackDaemon is a service which can receive a never-ending
+ *  AisTrackService is a service which can receive a never-ending
  *  stream of AisPackets from an AisBus, and track individual vessels
  *  in the stream.
  */
@@ -49,16 +49,20 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 public class AisTrackService {
 
     private static final Logger LOG = LoggerFactory.getLogger(AisTrackService.class);
+    { LOG.info("AisTrackService created.");  }
+
+    /** Number of secs between status outputs */
+    private final int secsBetweenStatus = 60;
 
     @Inject
     private AisBus aisBus;
 
-    private Predicate<AisPacket> trackerInputPacketFilter;
+    @Inject
+    private TargetTracker tracker;
 
+    private final Predicate<AisPacket> trackerInputPacketFilter;
     private final ScheduledExecutorService statusExecutor = Executors.newSingleThreadScheduledExecutor();
     private final ExecutorService serviceExecutor = Executors.newSingleThreadExecutor();
-
-    private final TargetTracker tracker = new TargetTracker();
 
     /** Create a TrackService with no input filter */
     public AisTrackService() {
@@ -98,10 +102,10 @@ public class AisTrackService {
     }
 
     public void start() {
-        LOG.info("Starting AisTrackDaemon");
+        LOG.info("Starting AisTrackService");
         Objects.requireNonNull(aisBus);
 
-        statusExecutor.scheduleAtFixedRate(() -> LOG.debug("Now tracking " + tracker.size() + " targets."), 5, 5, SECONDS);
+        statusExecutor.scheduleAtFixedRate(() -> LOG.debug("Now tracking " + tracker.size() + " targets."), secsBetweenStatus, secsBetweenStatus, SECONDS);
         serviceExecutor.submit(() -> {
             startAisBus(packet -> {
                 if (trackerInputPacketFilter.test(packet))
@@ -128,13 +132,13 @@ public class AisTrackService {
     }
 
     public void stop() {
-        LOG.info("Stopping AisTrackDaemon");
+        LOG.info("Stopping AisTrackService");
         if (aisBus != null) {
             aisBus.cancel();
         }
         serviceExecutor.shutdownNow();
         statusExecutor.shutdown();
-        LOG.info("AisTrackDaemon stopped.");
+        LOG.info("AisTrackService stopped.");
     }
 
     public static void main(String[] args) throws Exception {
@@ -145,6 +149,10 @@ public class AisTrackService {
 
         AisTrackService trackService = new AisTrackService(AisPacketFilters.parseExpressionFilter("t.sog>2 & m.mmsi in (265522540, 219001000, 230985150, 230985150, 265588910, 357860000, 357860000)"));
         trackService.start();
+    }
+
+    void setTargetTracker(TargetTracker targetTracker) {
+        this.tracker = targetTracker;
     }
 
     void setAisBus(AisBus aisBus) {

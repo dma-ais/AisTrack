@@ -17,8 +17,10 @@ package dk.dma.ais.track;
 import dk.dma.ais.bus.AisBus;
 import dk.dma.ais.configuration.bus.AisBusConfiguration;
 import dk.dma.ais.packet.AisPacketReader;
+import dk.dma.ais.tracker.targetTracker.TargetTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,6 +35,10 @@ import static java.lang.System.exit;
 public class AisTrackServiceTestConfiguration {
 
     static final Logger LOG = LoggerFactory.getLogger(AisTrackServiceTestConfiguration.class);
+
+    /** Location of aisbus.xml file */
+    @Value("${dk.dma.ais.track.AisTrackService.aisbusxml}")
+    private String aisBusXmlFileName;
 
     @Inject
     ApplicationContext ctx;
@@ -51,9 +57,15 @@ public class AisTrackServiceTestConfiguration {
     }
 
     @Bean
+    public TargetTracker provideTargetTracker() {
+        return new TargetTracker();
+    }
+
+    @Bean
     public AisTrackService provideAisTrackService() throws IOException {
         AisTrackService aisTrackService = new AisTrackService();
-        aisTrackService.setAisBus(provideAisBus());
+        aisTrackService.setTargetTracker(ctx.getBean(TargetTracker.class));
+        aisTrackService.setAisBus(ctx.getBean(AisBus.class));
         aisTrackService.start();
 
         String testdataResourceName = "testdata-00.ais";
