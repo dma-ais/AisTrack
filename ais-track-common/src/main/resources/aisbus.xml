@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<aisBusConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<!-- Input filters -->
+	<filter xsi:type="duplicateFilterConfiguration" />
+	<!-- <filter xsi:type="sanityFilterConfiguration" /> -->
+	<!-- <filter xsi:type="expressionFilterConfiguration"> -->
+	<!-- 		<expression><![CDATA[(s.country not in (GBR)) & ((t.pos within circle(70,-46,1800000)) | ((t.pos within bbox(57,-180,90,180)) & ((s.country=NOR) | (s.region=804))))]]></expression> -->
+	<!-- </filter> -->
+	<!-- <filter xsi:type="expressionFilterConfiguration">  -->
+	<!--	<expression><![CDATA[(s.country not in (GBR)) & (s.region!=808)]]></expression> -->
+	<!-- </filter> -->
+	<!-- <filter xsi:type="downSampleFilterConfiguration">  -->
+	<!--	<samplingRate>300</samplingRate> -->
+	<!-- </filter> -->
+
+	<!-- Provider AISW -->
+	<provider xsi:type="tcpClientProviderConfiguration">
+		<name>AISW_unfiltered</name>
+		<hostPort>192.168.1.40:2223</hostPort>
+		<hostPort>192.168.1.40:2224</hostPort>
+		<reconnectInterval>1</reconnectInterval>
+		<timeout>5</timeout>
+	</provider>
+	<!-- Output -->
+	<consumer xsi:type="tcpServerConsumerConfiguration">
+		<name>Output</name>
+		<serverConf>
+			<maxClients>10</maxClients>
+			<port>9010</port>
+		</serverConf>
+	</consumer>
+</aisBusConfiguration>

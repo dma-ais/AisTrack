@@ -9,8 +9,6 @@ dependency-reduced-pom.xml
 .project
 .settings/
 backup/
-aisbus.xml
-aistrack.properties
 .DS_Store
 .idea
 *.iml
