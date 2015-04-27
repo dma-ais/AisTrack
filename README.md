@@ -30,23 +30,33 @@ Aisbus.xml configures the AIS sources and input filtering in front of the tracke
 ### Directly from the command line:
 
 1. Go to a working directory where ais-track-rest-0.1-SNAPSHOT.jar resides; e.g.:
-	   $ cd ais-track-rest/target/
+  
+        $ cd ais-track-rest/target/
+
 1. Make sure that aisbus.xml is located in data/aisbus.xml:
-	   $ ls -l data/
-       total 8
-       -rwxr-xr-x+ 1 tbsalling  staff  1317 27 Apr 09:00 aisbus.xml
+
+        $ ls -l data/
+        total 8
+        -rwxr-xr-x+ 1 tbsalling  staff  1317 27 Apr 09:00 aisbus.xml
+
 1. Launch the tracker:
-	   $ java -jar ais-track-rest-0.1-SNAPSHOT.jar
+
+        $ java -jar ais-track-rest-0.1-SNAPSHOT.jar
 
 ### Using Docker:
 
 1. Pull the latest Docker image:
-		$ sudo docker pull dmadk/ais-track:latest
+
+        $ sudo docker pull dmadk/ais-track:latest
+
 1. Make sure that aisbus.xml is located in some directory, say ~/tmp:
-	   $ ls -l ~/tmp/
-       total 8
-       -rwxr-xr-x+ 1 tbsalling  staff  1317 27 Apr 09:00 aisbus.xml
+
+        $ ls -l ~/tmp/
+        total 8
+        -rwxr-xr-x+ 1 tbsalling  staff  1317 27 Apr 09:00 aisbus.xml
+
 1. Run the docker image - with ~/tmp mounted as /data:
+
        sudo docker run -v ~/tmp:/data dmadk/ais-track:latest
 
 ## REST API ##
