@@ -57,7 +57,8 @@ Aisbus.xml configures the AIS sources and input filtering in front of the tracke
 
 1. Run the docker image - with ~/tmp mounted as /data:
 
-       sudo docker run -v ~/tmp:/data dmadk/ais-track:latest
+        $ sudo docker run -v ~/tmp:/data dmadk/ais-track:latest
+
 
 ## REST API ##
 
