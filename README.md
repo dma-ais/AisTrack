@@ -96,8 +96,9 @@ matching targets - regardless which source provided the information.
 
 It is possible to take into considetaration only certain sources, by supplying a source filter expression to limit the source taken into account ([Read more about the source filter expressions](https://github.com/dma-ais/AisLib#filtering-on-packets-source)).
 
-	http://localhost:8080/tracks?sourceFilter=s.country%20in%20(DK)
-	http://localhost:8080/tracks?sourceFilter%3Ds.region%20%3D%20819
+	http://localhost:8080/tracks?sourceFilter=s.country%20in%20(DK)   -- use only Danish sources
+	http://localhost:8080/tracks?sourceFilter%3Ds.region%20%3D%20819  -- use only source region 819
+	http://localhost:8080/tracks?sourceFilter=s.bs%3D2190047          -- use only basestation 002190047
 
 E.g. return latest information about MMSI 244820404 and MMSI 345070335 using only Danish sources:
 
