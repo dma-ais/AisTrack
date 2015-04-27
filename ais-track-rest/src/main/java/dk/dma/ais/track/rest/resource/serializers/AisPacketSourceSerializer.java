@@ -23,7 +23,8 @@ public class AisPacketSourceSerializer extends JsonSerializer<AisPacketSource> {
             if (packetSource.getSourceType() != null)
                 jg.writeStringField("type", packetSource.getSourceType().toString());
 
-            jg.writeNumberField("bs", packetSource.getSourceBaseStation());
+            if (packetSource.getSourceBaseStation() != null)
+                jg.writeStringField("bs", packetSource.getSourceBaseStation().toString());
 
             if (packetSource.getSourceId() != null)
                 jg.writeStringField("id", packetSource.getSourceId());

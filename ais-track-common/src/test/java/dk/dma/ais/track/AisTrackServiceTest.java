@@ -124,9 +124,11 @@ public class AisTrackServiceTest {
     /** Test all targets can be filtered and extracted from tracker by source */
     @Test
     public void testTargetsFilteredBySource() throws Exception {
+
         assertEquals(43, aisTrackService.targets(AisPacketSourceFilters.parseSourceFilter("s.country = DNK"),    target -> true).size());
         assertEquals(43, aisTrackService.targets(AisPacketSourceFilters.parseSourceFilter("s.id = AISW"),        target -> true).size());
-        assertEquals(43, aisTrackService.targets(AisPacketSourceFilters.parseSourceFilter("s.bs = -2147483648"), target -> true).size()); // TODO why negative?
+        assertEquals(43, aisTrackService.targets(AisPacketSourceFilters.parseSourceFilter("s.bs > 0"),           target -> true).size());
+        assertEquals( 0, aisTrackService.targets(AisPacketSourceFilters.parseSourceFilter("s.bs < 0"),           target -> true).size());
         assertEquals(43, aisTrackService.targets(AisPacketSourceFilters.parseSourceFilter("s.region = 58"),      target -> true).size());
         assertEquals( 0, aisTrackService.targets(AisPacketSourceFilters.parseSourceFilter("s.region = 57"),      target -> true).size());
         assertEquals( 0, aisTrackService.targets(AisPacketSourceFilters.parseSourceFilter("s.type = SAT"),       target -> true).size());
