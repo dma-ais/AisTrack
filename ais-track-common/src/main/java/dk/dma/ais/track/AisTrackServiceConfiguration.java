@@ -17,7 +17,7 @@ package dk.dma.ais.track;
 import dk.dma.ais.bus.AisBus;
 import dk.dma.ais.configuration.bus.AisBusConfiguration;
 import dk.dma.ais.tracker.targetTracker.TargetTracker;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
