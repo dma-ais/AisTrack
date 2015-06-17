@@ -78,17 +78,26 @@ The set of returned targets can be limited through filtering. E.g. filtering to 
 
 	http://localhost:8080/tracks?mmsi=244820404&mmsi=345070335
 
-Or including only targets inside a given geographical bounding box:
+Or including only targets inside a given geographical area (here a bounding box):
 
 	http://localhost:8080/tracks?area=52.3|4.8|52.5|4.9
 
-Or including only targets inside any of a set of geographical bounding boxes:
+Or including only targets inside any of a set of geographical areas (here bounding boxes):
 
 	http://localhost:8080/tracks?area=52.3|4.8|52.5|4.9&area=20.0|100.0|21.0|110.0
 
-Or including only targets matching given MMSI numbers OR given geographical bounding boxes:
+Or including only targets inside any of a set of geographical areas but in all cases limited to a base area. This case is useful when baseArea is configured in the calling system, where as areas are decided by users.
+
+	http://localhost:8080/tracks?baseArea=57|-180|90|180&area=52.3|4.8|52.5|4.9&area=20.0|100.0|21.0|110.0
+
+Or including only targets matching given MMSI numbers OR given geographical areas (here a circle):
 
 	http://localhost:8080/tracks?mmsi=244820404&mmsi=345070335&area=52.0|4.0|52.5|5.0&area=20.0|100.0|21.0|110.0
+
+Geographical areas are either bounding boxes or circles. They are written using the syntax:
+    bounding box: <latitude left side>|<longitude bottom>|<latitude right side>|<longitude top>
+    circle: circle(<latitude center>,<longitude center>,<radius in meters>)
+
 
 #### Query all targets limited by source
 The queries shown above all return the most recent information known about the

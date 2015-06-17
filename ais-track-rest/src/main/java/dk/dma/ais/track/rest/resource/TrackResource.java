@@ -22,7 +22,9 @@ import dk.dma.ais.track.AisTrackService;
 import dk.dma.ais.track.rest.resource.exceptions.CannotParseFilterExpressionException;
 import dk.dma.ais.track.rest.resource.exceptions.TargetNotFoundException;
 import dk.dma.ais.tracker.targetTracker.TargetInfo;
+import dk.dma.enav.model.geometry.Area;
 import dk.dma.enav.model.geometry.BoundingBox;
+import dk.dma.enav.model.geometry.Circle;
 import dk.dma.enav.model.geometry.CoordinateSystem;
 import dk.dma.enav.model.geometry.Position;
 import org.springframework.http.MediaType;
@@ -33,6 +35,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
@@ -62,7 +66,7 @@ public class TrackResource {
      * Example URL:
      * - http://localhost:8080/?sourceFilter=s.country%20in%20(DK)
      *
-     * @param sourceFilterExpression
+     * @param sourceFilterExpression Source filter expression
      * @return
      */
     @RequestMapping(value="/", produces = MediaType.TEXT_PLAIN_VALUE)
@@ -128,33 +132,57 @@ public class TrackResource {
     @RequestMapping(value = "/tracks", produces = MediaType.APPLICATION_JSON_VALUE)
     Set<TargetInfo> tracks(
             @RequestParam(value="sourceFilter", required = false) String sourceFilterExpression,
-            @RequestParam(value="mmsi", required = false) List<String> mmsiParams,
-            @RequestParam(value="area", required = false) List<String> areaParams) {
+            @RequestParam(value="baseArea", required = false) List<String> baseAreaParams,
+            @RequestParam(value="area", required = false) List<String> areaParams,
+            @RequestParam(value="mmsi", required = false) List<String> mmsiParams){
 
         Set<Integer> mmsis = Sets.newHashSet();
         if (mmsiParams != null && mmsiParams.size() > 0) {
             mmsiParams.forEach(mmsi -> mmsis.add(Integer.valueOf(mmsi)));
         }
 
-        Set<BoundingBox> areas = Sets.newHashSet();
-        if (areaParams != null && areaParams.size() > 0) {
-            areaParams.forEach(area -> {
-                String[] bordersAsString = area.split("\\|");
-                if (bordersAsString == null || bordersAsString.length != 4)
-                    throw new IllegalArgumentException("Expected four floating point values for area argument separated by vertical bar, not: " + area);
-                Double lat1 = Double.valueOf(bordersAsString[0]);
-                Double lon1 = Double.valueOf(bordersAsString[1]);
-                Double lat2 = Double.valueOf(bordersAsString[2]);
-                Double lon2 = Double.valueOf(bordersAsString[3]);
-                areas.add(BoundingBox.create(Position.create(lat1, lon1), Position.create(lat2, lon2), CoordinateSystem.CARTESIAN));
-            });
-        }
+        Set<Area> areas = map2Areas(areaParams);
+        Set<Area> baseAreas = map2Areas(baseAreaParams);
 
         return trackService.targets(
             createSourceFilterPredicate(sourceFilterExpression),
-            createTargetFilterPredicate(mmsis, areas)
+            createTargetFilterPredicate(mmsis, baseAreas, areas)
         );
     }
+
+    private static Set<Area> map2Areas(List<String> areaParams){
+        Set<Area> areas = Sets.newHashSet();
+        if (areaParams != null && areaParams.size() > 0) {
+            areaParams.forEach(area -> {
+                if(area.trim().startsWith("circle")){
+                    try{
+                        area = URLDecoder.decode(area, "UTF-8");
+                        System.out.println(area);
+                        int p1 = area.indexOf("(");
+                        int p2 = area.indexOf(")");
+                        String[] values = area.substring(p1 + 1, p2).split(",");
+                        Double lat = Double.valueOf(values[0].trim());
+                        Double lon = Double.valueOf(values[1].trim());
+                        Double radius = Double.valueOf(values[2].trim());
+                        areas.add(new Circle(Position.create(lat, lon), radius, CoordinateSystem.CARTESIAN));
+                    }catch(UnsupportedEncodingException e){
+                        throw new RuntimeException(e);
+                    }
+                }else{
+                    String[] bordersAsString = area.split("\\|");
+                    if (bordersAsString == null || bordersAsString.length != 4)
+                        throw new IllegalArgumentException("Expected four floating point values for area argument separated by vertical bar, not: " + area);
+                    Double lat1 = Double.valueOf(bordersAsString[0]);
+                    Double lon1 = Double.valueOf(bordersAsString[1]);
+                    Double lat2 = Double.valueOf(bordersAsString[2]);
+                    Double lon2 = Double.valueOf(bordersAsString[3]);
+                    areas.add(BoundingBox.create(Position.create(lat1, lon1), Position.create(lat2, lon2), CoordinateSystem.CARTESIAN));
+                }
+            });
+        }
+        return areas;
+    }
+
 
     /** Create a Predicate<AisPacketSource> out of a user supplied expression string */
     static Predicate<AisPacketSource> createSourceFilterPredicate(String sourceFilterExpression) {
@@ -174,10 +202,15 @@ public class TrackResource {
     }
 
     /** Create a Predicate<TargetInfo> out of user supplied mmsi and area information */
-    static Predicate<TargetInfo> createTargetFilterPredicate(Set<Integer> mmsis, Set<BoundingBox> areas) {
+    static Predicate<TargetInfo> createTargetFilterPredicate(Set<Integer> mmsis, Set<Area> baseAreas, Set<Area> areas) {
         Predicate<TargetInfo> mmsiPredicate = null;
         if (mmsis != null && mmsis.size() > 0) {
             mmsiPredicate =  targetInfo -> mmsis.contains(targetInfo.getMmsi());
+        }
+
+        Predicate<TargetInfo> baseAreaPredicate = null;
+        if (baseAreas != null && baseAreas.size() > 0) {
+            baseAreaPredicate =  targetInfo -> baseAreas.stream().anyMatch(area -> targetInfo.getPosition() != null && area.contains(targetInfo.getPosition()));
         }
 
         Predicate<TargetInfo> areaPredicate = null;
@@ -185,14 +218,23 @@ public class TrackResource {
             areaPredicate =  targetInfo -> areas.stream().anyMatch(area -> targetInfo.getPosition() != null && area.contains(targetInfo.getPosition()));
         }
 
-        if (mmsiPredicate == null && areaPredicate == null)
+        Predicate<TargetInfo> resultingAreaPredicate = null;
+        if(baseAreaPredicate != null && areaPredicate == null){
+            resultingAreaPredicate = baseAreaPredicate;
+        }else if (baseAreaPredicate != null && areaPredicate != null){
+            resultingAreaPredicate = baseAreaPredicate.and(areaPredicate);
+        }else{
+            resultingAreaPredicate = areaPredicate;
+        }
+
+        if (mmsiPredicate == null && resultingAreaPredicate == null)
             return t -> true;
-        else if (mmsiPredicate != null && areaPredicate == null)
+        else if (mmsiPredicate != null && resultingAreaPredicate == null)
             return mmsiPredicate;
-        else if (mmsiPredicate == null && areaPredicate != null)
-            return areaPredicate;
+        else if (mmsiPredicate == null && resultingAreaPredicate != null)
+            return resultingAreaPredicate;
         else
-            return mmsiPredicate.or(areaPredicate);
+            return mmsiPredicate.or(resultingAreaPredicate);
     }
 
 }
