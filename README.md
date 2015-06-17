@@ -96,8 +96,8 @@ Or including only targets matching given MMSI numbers OR given geographical area
 
 Geographical areas are either bounding boxes or circles. They are written using the syntax:
 
-    bounding box: &lt;latitude left side&gt;|&lt;longitude bottom&gt;|&lt;latitude right side&gt;|&lt;longitude top&gt;
-    circle: circle(&lt;latitude center&gt;,&lt;longitude center&gt;,&lt;radius in meters&gt;)
+    bounding box: <latitude left side>|<longitude bottom>|<latitude right side>|<longitude top>
+    circle: circle(<latitude center>,<longitude center>,<radius in meters>)
 
 
 #### Query all targets limited by source
