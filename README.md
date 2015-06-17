@@ -90,13 +90,14 @@ Or including only targets inside any of a set of geographical areas but in all c
 
 	http://localhost:8080/tracks?baseArea=57|-180|90|180&area=52.3|4.8|52.5|4.9&area=20.0|100.0|21.0|110.0
 
-Or including only targets matching given MMSI numbers OR given geographical areas (here a circle):
+Or including only targets matching given MMSI numbers OR given geographical areas:
 
 	http://localhost:8080/tracks?mmsi=244820404&mmsi=345070335&area=52.0|4.0|52.5|5.0&area=20.0|100.0|21.0|110.0
 
 Geographical areas are either bounding boxes or circles. They are written using the syntax:
-    bounding box: <latitude left side>|<longitude bottom>|<latitude right side>|<longitude top>
-    circle: circle(<latitude center>,<longitude center>,<radius in meters>)
+
+    bounding box: &lt;latitude left side&gt;|&lt;longitude bottom&gt;|&lt;latitude right side&gt;|&lt;longitude top&gt;
+    circle: circle(&lt;latitude center&gt;,&lt;longitude center&gt;,&lt;radius in meters&gt;)
 
 
 #### Query all targets limited by source
