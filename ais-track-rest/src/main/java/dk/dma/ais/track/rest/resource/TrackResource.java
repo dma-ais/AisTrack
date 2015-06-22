@@ -47,7 +47,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 /**
  * @author tbsalling
  */
+
 @RestController
+@RequestMapping(value="ais-track")
 public class TrackResource {
 
     @Inject
