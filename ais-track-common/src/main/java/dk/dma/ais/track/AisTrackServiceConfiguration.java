@@ -17,6 +17,7 @@ package dk.dma.ais.track;
 import dk.dma.ais.bus.AisBus;
 import dk.dma.ais.configuration.bus.AisBusConfiguration;
 import dk.dma.ais.tracker.targetTracker.TargetTracker;
+import dk.dma.ais.tracker.targetTracker.TargetTrackerFileBackupService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,9 @@ import static java.lang.System.exit;
 public class AisTrackServiceConfiguration {
 
     static final Logger LOG = LoggerFactory.getLogger(AisTrackServiceConfiguration.class);
+
+    @Value("${dk.dma.ais.track.AisTrackService.backup}")
+    private String backupPath;
 
     {  LOG.info("AisTrackServiceConfiguration created."); }
 
@@ -60,6 +64,25 @@ public class AisTrackServiceConfiguration {
     public TargetTracker provideTargetTracker() {
         return new TargetTracker();
     }
+
+    @Bean
+    public TargetTrackerFileBackupService provideFileBackupService(TargetTracker targetTracker){
+        if(backupPath == null || backupPath.trim().length() == 0){
+            LOG.info("dk.dma.ais.track.AisTrackService.backup not available. Can not configure {}", TargetTrackerFileBackupService.class.getSimpleName());
+            return null;
+        }
+
+        Path path = Paths.get(backupPath);
+        if(!path.toFile().exists()){
+            path.toFile().mkdirs();
+        }
+
+        TargetTrackerFileBackupService backupService = new TargetTrackerFileBackupService(targetTracker, path);
+        LOG.info("{} configured with path {}.", TargetTrackerFileBackupService.class.getSimpleName(), backupPath);
+
+        return backupService;
+    }
+
 
     private InputStream aisBusConfiguration() throws IOException {
         InputStream is = null;

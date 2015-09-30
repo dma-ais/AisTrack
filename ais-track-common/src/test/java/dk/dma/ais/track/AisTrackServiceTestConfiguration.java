@@ -18,6 +18,7 @@ import dk.dma.ais.bus.AisBus;
 import dk.dma.ais.configuration.bus.AisBusConfiguration;
 import dk.dma.ais.packet.AisPacketReader;
 import dk.dma.ais.tracker.targetTracker.TargetTracker;
+import dk.dma.ais.tracker.targetTracker.TargetTrackerFileBackupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +29,8 @@ import org.springframework.context.annotation.Configuration;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static java.lang.System.exit;
 
@@ -39,6 +42,8 @@ public class AisTrackServiceTestConfiguration {
     /** Location of aisbus.xml file */
     @Value("${dk.dma.ais.track.AisTrackService.aisbusxml}")
     private String aisBusXmlFileName;
+
+    private String backupPath = "target/data/test-backup";
 
     @Inject
     ApplicationContext ctx;
@@ -62,9 +67,29 @@ public class AisTrackServiceTestConfiguration {
     }
 
     @Bean
+    public TargetTrackerFileBackupService provideFileBackupService(TargetTracker targetTracker){
+        if(backupPath == null || backupPath.trim().length() == 0){
+            LOG.info("dk.dma.ais.track.AisTrackService.backup not available. Can not configure {}", TargetTrackerFileBackupService.class.getSimpleName());
+            return null;
+        }
+
+        Path path = Paths.get(backupPath);
+        if(!path.toFile().exists()){
+            path.toFile().mkdirs();
+        }
+
+        TargetTrackerFileBackupService backupService = new TargetTrackerFileBackupService(targetTracker, path);
+        LOG.info("{} configured with path {}.", TargetTrackerFileBackupService.class.getSimpleName(), backupPath);
+
+        return backupService;
+    }
+
+
+    @Bean
     public AisTrackService provideAisTrackService() throws IOException {
         AisTrackService aisTrackService = new AisTrackService();
         aisTrackService.setTargetTracker(ctx.getBean(TargetTracker.class));
+        aisTrackService.setTargetTrackerFileBackupService(ctx.getBean(TargetTrackerFileBackupService.class));
         aisTrackService.setAisBus(ctx.getBean(AisBus.class));
         aisTrackService.start();
 

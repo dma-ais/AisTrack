@@ -21,22 +21,27 @@ import dk.dma.ais.packet.AisPacketFilters;
 import dk.dma.ais.packet.AisPacketSource;
 import dk.dma.ais.tracker.targetTracker.TargetInfo;
 import dk.dma.ais.tracker.targetTracker.TargetTracker;
+import dk.dma.ais.tracker.targetTracker.TargetTrackerFileBackupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.concurrent.ThreadSafe;
 import javax.inject.Inject;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static java.lang.System.exit;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
@@ -54,13 +59,23 @@ public class AisTrackService {
     /** Number of secs between status outputs */
     private final int secsBetweenStatus = 60;
 
+    /** Number of minutes between cleanup */
+    private final int minutesBetweenCleanup = 5;
+
     @Inject
     private AisBus aisBus;
 
     @Inject
     private TargetTracker tracker;
 
+    @Inject
+    private TargetTrackerFileBackupService backupService;
+
+    @Value("${dk.dma.ais.track.AisTrackService.targetExpire}")
+    private String targetExpire;
+
     private final Predicate<AisPacket> trackerInputPacketFilter;
+    private final ScheduledExecutorService cleanupExecutor = Executors.newSingleThreadScheduledExecutor();
     private final ScheduledExecutorService statusExecutor = Executors.newSingleThreadScheduledExecutor();
     private final ExecutorService serviceExecutor = Executors.newSingleThreadExecutor();
 
@@ -105,6 +120,34 @@ public class AisTrackService {
         LOG.info("Starting AisTrackService");
         Objects.requireNonNull(aisBus);
 
+        if(backupService != null){
+            LOG.info("Starting {}", TargetTrackerFileBackupService.class.getSimpleName());
+            backupService.startAsync();
+            backupService.awaitRunning();
+        } else {
+            LOG.info("{} not available", TargetTrackerFileBackupService.class.getSimpleName());
+        }
+
+        if(cleanup()){
+            Duration duration = Duration.parse(targetExpire);
+            BiPredicate<AisPacketSource, TargetInfo> predicate = new BiPredicate<AisPacketSource, TargetInfo>(){
+                long currentTime = System.currentTimeMillis();
+                public boolean test(AisPacketSource source, TargetInfo targetInfo) {
+                    if(targetInfo.getAisTarget() == null || targetInfo.getAisTarget().getLastReport() == null){
+                        return false;
+                    }
+
+                    long ageInSeconds = (currentTime - targetInfo.getAisTarget().getLastReport().getTime()) / 1000;
+                    return ageInSeconds > duration.getSeconds();
+                }
+            };
+
+            cleanupExecutor.scheduleAtFixedRate(() -> tracker.removeAll(predicate), minutesBetweenCleanup, minutesBetweenCleanup, MINUTES);
+            LOG.info("Configured cleanup of targets older than {}", targetExpire);
+        }else{
+            LOG.info("AisTrackService.targetExpire not configured. Cleanup not configured.");
+        }
+
         statusExecutor.scheduleAtFixedRate(() -> LOG.debug("Now tracking " + tracker.size() + " targets."), secsBetweenStatus, secsBetweenStatus, SECONDS);
         serviceExecutor.submit(() -> {
             startAisBus(packet -> {
@@ -136,8 +179,19 @@ public class AisTrackService {
         if (aisBus != null) {
             aisBus.cancel();
         }
+
         serviceExecutor.shutdownNow();
         statusExecutor.shutdown();
+
+        if(cleanup()){
+            cleanupExecutor.shutdownNow();
+        }
+
+        if(backupService != null && backupService.isRunning()){
+            backupService.stopAsync();
+            backupService.awaitTerminated();
+        }
+
         LOG.info("AisTrackService stopped.");
     }
 
@@ -151,8 +205,16 @@ public class AisTrackService {
         trackService.start();
     }
 
+    private boolean cleanup(){
+        return targetExpire != null && targetExpire.trim().length() != 0;
+    }
+
     void setTargetTracker(TargetTracker targetTracker) {
         this.tracker = targetTracker;
+    }
+
+    void setTargetTrackerFileBackupService(TargetTrackerFileBackupService backupService) {
+        this.backupService = backupService;
     }
 
     void setAisBus(AisBus aisBus) {
