@@ -14,7 +14,7 @@
 
 	<groupId>dk.dma.ais.track</groupId>
 	<artifactId>ais-track</artifactId>
-	<version>0.1-SNAPSHOT</version>
+	<version>1.0</version>
 	<packaging>pom</packaging>
 	<name>AisTrack</name>
 	<description>AIS vessel tracker</description>
@@ -26,8 +26,8 @@
 	</scm>
 
 	<properties>
-		<dependencies.aislib.version>2.2-SNAPSHOT</dependencies.aislib.version>
-		<dependencies.dma-commons.version>0.3-SNAPSHOT</dependencies.dma-commons.version>
+		<dependencies.aislib.version>2.2</dependencies.aislib.version>
+		<dependencies.dma-commons.version>0.3</dependencies.dma-commons.version>
 		<dependencies.spring-boot.version>1.2.3.RELEASE</dependencies.spring-boot.version>
 		<java.version>1.8</java.version>
 	</properties>
