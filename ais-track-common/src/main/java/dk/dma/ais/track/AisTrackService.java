@@ -130,18 +130,7 @@ public class AisTrackService {
 
         if(cleanup()){
             Duration duration = Duration.parse(targetExpire);
-            BiPredicate<AisPacketSource, TargetInfo> predicate = new BiPredicate<AisPacketSource, TargetInfo>(){
-                long currentTime = System.currentTimeMillis();
-                public boolean test(AisPacketSource source, TargetInfo targetInfo) {
-                    if(targetInfo.getAisTarget() == null || targetInfo.getAisTarget().getLastReport() == null){
-                        return false;
-                    }
-
-                    long ageInSeconds = (currentTime - targetInfo.getAisTarget().getLastReport().getTime()) / 1000;
-                    return ageInSeconds > duration.getSeconds();
-                }
-            };
-
+            BiPredicate<AisPacketSource, TargetInfo> predicate = new LastReportFilter(duration);
             cleanupExecutor.scheduleAtFixedRate(() -> tracker.removeAll(predicate), minutesBetweenCleanup, minutesBetweenCleanup, MINUTES);
             LOG.info("Configured cleanup of targets older than {}", targetExpire);
         }else{
