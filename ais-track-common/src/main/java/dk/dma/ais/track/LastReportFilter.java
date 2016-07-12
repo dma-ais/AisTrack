@@ -28,9 +28,16 @@ public class LastReportFilter implements BiPredicate<AisPacketSource, TargetInfo
     private final Duration duration;
 
     public LastReportFilter(Duration duration){
+        System.out.println(" LastReportFilter " +duration);
         this.duration = duration;
     }
 
+    /**
+     * test if the tagertInfos last report has expired
+     * @param source
+     * @param targetInfo
+     * @return
+     */
     public boolean test(AisPacketSource source, TargetInfo targetInfo) {
         if(targetInfo.getAisTarget() == null || targetInfo.getAisTarget().getLastReport() == null){
             return false;
@@ -38,6 +45,9 @@ public class LastReportFilter implements BiPredicate<AisPacketSource, TargetInfo
 
         long currentTime = System.currentTimeMillis();
         long ageInSeconds = (currentTime - targetInfo.getAisTarget().getLastReport().getTime()) / 1000;
+        if(ageInSeconds < 0) { // its from the future...
+            return ageInSeconds < duration.negated().getSeconds(); // okay, if not more than duration. I.e. only two days ahead
+        }
         return ageInSeconds > duration.getSeconds();
     }
 

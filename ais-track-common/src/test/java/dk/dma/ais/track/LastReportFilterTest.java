@@ -17,6 +17,7 @@ package dk.dma.ais.track;
 import dk.dma.ais.data.AisTarget;
 import dk.dma.ais.tracker.targetTracker.TargetInfo;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -79,6 +80,28 @@ public class LastReportFilterTest {
         LastReportFilter filter = new LastReportFilter(duration);
         Assert.assertTrue(filter.test(null, targetInfo));
     }
+
+    @Test
+    public void testLastReportIsFromTheFuture100Hours(){
+        Date lastReport = new Date(System.currentTimeMillis() + 1000*3600*100);
+        Duration duration = Duration.parse("P2D");
+
+        TargetInfo targetInfo = createTargetInfo(lastReport);
+
+        LastReportFilter filter = new LastReportFilter(duration);
+        Assert.assertTrue(filter.test(null, targetInfo));
+    }
+    @Test
+    public void testLastReportIsFromTheFuture10Hours(){
+        Date lastReport = new Date(System.currentTimeMillis() + 1000*3600*10);
+        Duration duration = Duration.parse("P2D");
+
+        TargetInfo targetInfo = createTargetInfo(lastReport);
+
+        LastReportFilter filter = new LastReportFilter(duration);
+        Assert.assertFalse(filter.test(null, targetInfo));
+    }
+
 
     private TargetInfo createTargetInfo(Date lastReport){
         AisTarget aisTarget = Mockito.mock(AisTarget.class);
