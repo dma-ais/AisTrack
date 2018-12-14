@@ -13,8 +13,7 @@ pipeline {
         stage('build') {
             steps {
                 withMaven(options: [junitPublisher(ignoreAttachments: false), artifactsPublisher()]) {
-//                    TODO remove -DskipTests when java problem is solved
-                    sh 'mvn -DskipTests -DincludeSrcJavadocs clean source:jar install'
+                    sh 'mvn -DincludeSrcJavadocs clean source:jar install'
                 }
             }
         }
