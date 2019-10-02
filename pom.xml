@@ -66,7 +66,7 @@
             <dependency>
                 <groupId>dk.dma</groupId>
                 <artifactId>dma-root-pom</artifactId>
-                <version>26</version>
+                <version>25</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
